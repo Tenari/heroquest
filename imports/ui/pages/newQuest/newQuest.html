@@ -1,0 +1,22 @@
+<template name="newQuest">
+  <div class="new-quest-container">
+    <div>
+      <input type="text" class="cmd"/>
+      <input type="number" class="height" value="{{height}}"/>x<input type="number" class="width" value="{{width}}"/>
+      {{mode}}
+    </div>
+    <div class="map">
+      {{#each row in rows}}
+        <div class="map-row">
+          {{#each tile in row}}
+            <div class="map-tile"></div>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+    <div class="name-and-description">
+      <div class="name-container"><input type="text" class="name" placeholder="Quest name"/></div>
+      <div class="description-container"><textarea class="description" placeholder="Flavor text + description"></textarea></div>
+    </div>
+  </div>
+</template>

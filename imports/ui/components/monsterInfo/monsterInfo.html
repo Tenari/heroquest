@@ -1,0 +1,46 @@
+<template name="monsterInfo">
+  <div class="active-monster-info">
+    <div class="name">{{monster.name}}</div>
+    <div class="size-line">{{monster.size}} {{monster.type}} ({{monster.subtype}}), {{monster.alignment}}</div>
+    <div class="ac-line"><strong>Armor Class</strong> {{monster.armor_class}}</div>
+    <div class="hp-line"><strong>Hit Points</strong> {{monster.hit_points}} ({{monster.hit_dice}})</div>
+    <div class="speed-line"><strong>Speed</strong> {{monster.speed}}</div>
+    <div class="ability-scores">
+      <div>
+        <div class="score-name">STR</div>
+        <div class="score">{{monster.strength}} ({{abilityModifier monster.strength}})</div>
+      </div>
+      <div>
+        <div class="score-name">DEX</div>
+        <div class="score">{{monster.dexterity}} ({{abilityModifier monster.dexterity}})</div>
+      </div>
+      <div>
+        <div class="score-name">CON</div>
+        <div class="score">{{monster.constitution}} ({{abilityModifier monster.constitution}})</div>
+      </div>
+      <div>
+        <div class="score-name">INT</div>
+        <div class="score">{{monster.intelligence}} ({{abilityModifier monster.intelligence}})</div>
+      </div>
+      <div>
+        <div class="score-name">WIS</div>
+        <div class="score">{{monster.wisdom}} ({{abilityModifier monster.wisdom}})</div>
+      </div>
+      <div>
+        <div class="score-name">CHA</div>
+        <div class="score">{{monster.charisma}} ({{abilityModifier monster.charisma}})</div>
+      </div>
+    </div>
+    <div class="skills-line"><strong>Skills</strong> {{monster.skills}}</div>
+    <div class="senses-line"><strong>Senses</strong> {{monster.senses}}</div>
+    <div class="langs-line"><strong>Languages</strong> {{monster.languages}}</div>
+    <div class="cr-line"><strong>Challenge</strong> {{monster.challenge_rating}} ({{xpForCR monster.challenge_rating}}XP)</div>
+    {{#each ability in monster.special_abilities }}
+      <div class="special-ability"><strong>{{ability.name}}</strong> {{ability.desc}}</div>
+    {{/each}}
+    <div class="actions-divider">Actions</div>
+    {{#each action in monster.actions }}
+      <div class="action"><strong>{{action.name}}.</strong> {{action.desc}}</div>
+    {{/each}}
+  </div>
+</template>

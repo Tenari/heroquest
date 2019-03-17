@@ -1,0 +1,54 @@
+.map {
+  width: 900px;
+  height: 408px;
+  border: 1px solid black;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: scroll;
+  .map-row {
+    display: flex;
+    flex-wrap: nowrap;
+    height: 34px;
+    .map-tile {
+      border: 1px solid rgba(0,0,0,0.1);
+      width: 32px;
+      min-width: 32px;
+    }
+  }
+}
+
+.new-quest-container {
+  padding-top: 30px;
+  padding-left: 50px;
+  padding-right: 50px;
+
+  .name-and-description {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    border: 10px solid transparent;
+    padding: 15px;
+    -webkit-border-image: url(parchment-border.jpg) 30 round; /* Safari 3.1-5 */
+    -o-border-image: url(parchment-border.jpg) 30 round; /* Opera 11-12.1 */
+    border-image: url(parchment-border.jpg) 30 round;
+
+    .name-container {
+      margin-bottom: 20px;
+      input {
+        width: 100%;
+        font-size: 24px;
+        font-family: 'Fondamento', serif;
+        border: 0;
+        border-bottom: 1px solid black;
+      }
+    }
+    textarea {
+      width: 100%;
+      border: 0;
+      font-family: 'Fondamento', serif;
+      font-size: 18px;
+    }
+  }
+}

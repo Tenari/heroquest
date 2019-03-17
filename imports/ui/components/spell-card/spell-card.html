@@ -1,0 +1,10 @@
+<template name="spell">
+  <div class="spell-card">
+    <div class="spell-name">{{spell.name}} (level {{spell.level}})</div>
+    <div class="spell-components">Components: {{spell.components}}</div>
+    <div>Duration {{spell.duration}} | Casting time: {{spell.casting_time}}</div>
+    {{#each line in spell.desc}}
+      <div>{{line}}</div>
+    {{/each}}
+  </div>
+</template>

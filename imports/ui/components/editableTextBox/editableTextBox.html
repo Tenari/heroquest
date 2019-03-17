@@ -1,0 +1,7 @@
+<template name="editableTextBox">
+  {{#if editing}}
+    <input value="{{editValue}}"/>
+  {{else}}
+    <div class="text">{{text}}</div>
+  {{/if}}
+</template>

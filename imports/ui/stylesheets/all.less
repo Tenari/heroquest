@@ -1,0 +1,79 @@
+html, body {
+  margin:0;
+  font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+}
+button {
+  border: 2px solid black;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+  font-size: 14px;
+  color: white;
+  background-color: blue;
+  &:hover {
+    box-shadow: 0px 0px 2px 1px #aaa;
+  }
+  &:active {
+    position: relative;
+    top: 1px;
+  }
+  &.danger-btn {
+    color: black;
+    background-color: red;
+  }
+}
+
+.row, .columns {display:flex;}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background-color: #290000; 
+  border-bottom: 2px solid #111;
+  .logo {
+    display: block;
+    background-image: url(logo.png);
+    background-size: cover;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: 30px;
+    width: 91px;
+    margin-left: 10px;
+  }
+}
+#content {
+  margin-top: 40px;
+}
+
+.event-notice-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 199;
+  .event-notice {
+    background-color: white;
+    border: 4px solid black;
+    padding: 20px;
+    max-width: 40%;
+    margin-left: 30%;
+    margin-top: 200px;
+    font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+    text-align: center;
+    .message {
+      margin-bottom: 20px;
+    }
+  }
+}
+
+.dice {
+  background-image: url(dice.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+}

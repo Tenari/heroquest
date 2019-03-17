@@ -1,0 +1,17 @@
+{
+  "name": "dnd",
+  "private": true,
+  "scripts": {
+    "start": "meteor run",
+    "test": "meteor test --once --driver-package meteortesting:mocha"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0-beta.48",
+    "bcrypt": "^2.0.1",
+    "meteor-node-stubs": "^0.4.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2"
+  }
+}

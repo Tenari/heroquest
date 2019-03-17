@@ -1,0 +1,22 @@
+<template name="App_home">
+  {{#if currentUser}}
+    {{> loginButtons}}
+    <div>
+      Account home page goes here:
+      <p>lists characters, quests created+unlocked, account balance, lets you refill account balance</p>
+      {{#if noCharacters}}
+        <div><a href="/character/new">Create your first character!</a></div>
+      {{else}}
+        <ul>
+          Characters:
+          {{#each character in characters}}
+            <li><a href="/character/{{character._id}}">{{character.name}}</a></li>
+          {{/each}}
+        </ul>
+      {{/if}}
+      <div><a href="/quest/new">Create a Quest</a></div>
+    </div>
+  {{else}}
+    {{> landing}}
+  {{/if}}
+</template>

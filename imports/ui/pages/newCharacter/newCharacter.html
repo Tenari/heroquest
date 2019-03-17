@@ -1,0 +1,45 @@
+<template name="newCharacter">
+  <form class="new-character-form">
+
+    <div class="new-character-row">
+      <div class="character-name-row">
+        <label>Name</label> <input autocomplete="off" type="text" name="name" class="character-name"/>
+      </div>
+    </div>
+
+    <div class="new-character-row">
+      {{#each caricature in caricatures}}
+        <div class="character-option {{isSelected caricature.key}}" data-key="{{caricature.key}}">{{caricature.name}}</div>
+      {{/each}}
+    </div>
+
+    <div>
+      <div class="description">{{selectedCharacter.desc}}</div>
+      <div class="character-details">
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Attack</div>
+            <div class="value">{{selectedCharacter.attack}} Combat dice</div>
+          </div>
+          <div class="stat">
+            <div class="label">Defense</div>
+            <div class="value">{{selectedCharacter.defense}} Combat dice</div>
+          </div>
+          <div class="stat">
+            <div class="label">Move</div>
+            <div class="value">{{selectedCharacter.move}} dice</div>
+          </div>
+          <div class="stat">
+            <div class="label">Mind / Body</div>
+            <div class="value">{{selectedCharacter.mind}} pts / {{selectedCharacter.body}} pts</div>
+          </div>
+        </div>
+        <div class="image-container"><img src="/{{selectedCharacter.key}}.png"/></div>
+      </div>
+    </div>
+
+    {{#if canCreateCharacter}}
+      <div class="new-character-row"><button class="submit-character">CREATE CHARACTER</button></div>
+    {{/if}}
+  </form>
+</template>

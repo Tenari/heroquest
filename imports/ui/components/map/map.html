@@ -1,0 +1,21 @@
+<template name="map">
+  <div class="map {{mode}}">
+  {{#each row in rows}}
+    <div class="game-row">
+      {{#each tile in row}}
+        <div class="game-tile">
+          {{#if tile.character}}
+            <div class="character {{tile.character.img}} {{#if tile.character.selectable}}selectable{{/if}}{{#if tile.character.active}}active{{/if}}" data-x="{{tile.character.x}}" data-y="{{tile.character.y}}" data-id="{{tile.character.characterId}}"></div>
+          {{/if}}
+          {{#if tile.wall}}
+            <div class="character wall"></div>
+          {{/if}}
+          {{#if xy}}
+            <span class="xy-marker">({{tile.x}},{{tile.y}})</span>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+  {{/each}}
+  </div>
+</template>
