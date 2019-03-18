@@ -8,11 +8,29 @@
   .map-row {
     display: flex;
     flex-wrap: nowrap;
-    height: 34px;
+    height: 32px;
     .map-tile {
-      border: 1px solid rgba(0,0,0,0.1);
       width: 32px;
       min-width: 32px;
+    }
+    .map-border {
+      width: 2px;
+      background-color: rgba(0,0,0,0.1);
+      &.true {
+        background-color: rgba(0,0,0,0.9);
+      }
+    }
+  }
+  .map-border-row {
+    display: flex;
+    flex-wrap: nowrap;
+    .map-border {
+      height: 2px;
+      width: 34px;
+      background-color: rgba(0,0,0,0.1);
+      &.true {
+        background-color: rgba(0,0,0,0.9);
+      }
     }
   }
 }

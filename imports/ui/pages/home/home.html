@@ -15,6 +15,12 @@
         </ul>
       {{/if}}
       <div><a href="/quest/new">Create a Quest</a></div>
+      <ul>
+        Quests:
+        {{#each quest in quests}}
+          <li><a href="/quest/new?qId={{quest._id}}">edit "{{quest.name}}"</a></li>
+        {{/each}}
+      </ul>
     </div>
   {{else}}
     {{> landing}}

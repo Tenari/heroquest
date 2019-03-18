@@ -4,18 +4,15 @@
       <input type="text" class="cmd"/>
       <input type="number" class="height" value="{{height}}"/>x<input type="number" class="width" value="{{width}}"/>
       {{mode}}
+      {{#if canSave}}
+        <button class="save">Save</button>
+      {{/if}}
     </div>
     <div class="map">
-      {{#each row in rows}}
-        <div class="map-row">
-          {{#each tile in row}}
-            <div class="map-tile"></div>
-          {{/each}}
-        </div>
-      {{/each}}
+      {{{mapHTML}}}
     </div>
     <div class="name-and-description">
-      <div class="name-container"><input type="text" class="name" placeholder="Quest name"/></div>
+      <div class="name-container"><input type="text" class="name" placeholder="Quest name" value="{{name}}"/></div>
       <div class="description-container"><textarea class="description" placeholder="Flavor text + description"></textarea></div>
     </div>
   </div>

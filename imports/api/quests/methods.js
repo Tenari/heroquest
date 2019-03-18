@@ -12,10 +12,16 @@ import { EventLogs } from '../eventLogs/eventLogs.js';
 Meteor.methods({
   'quests.insert'(name, details) {
     const userId = Meteor.userId();
-    if (!userId) return false; //you gotta be logged in
+    if (!userId) throw 'wtf, log in bro'; //you gotta be logged in
+    check(name, String);
     return Quests.insert({
       creatorId: userId,
+      published: false,
       name,
+      height: details.height,
+      width: details.width,
+      map: details.map,
+      desc: details.desc,
       createdAt: new Date(),
     });
   },
