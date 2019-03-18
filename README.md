@@ -35,6 +35,7 @@ Screens:
 - character creation
 - character details
 - quest creation
+  - quests lifecycle: new -> saved -> published. Can only be edited until published. After that, it's frozen.
 - quest list page
 - character leaderboard page
 - quest ranking page

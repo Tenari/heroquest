@@ -26,6 +26,7 @@ Template.newQuest.onCreated(function(){
         this.width.set(quest.width);
         this.height.set(quest.height);
         this.map.set(quest.map);
+        $('textarea.description').val(quest.desc);
       }
     })
   }
@@ -111,14 +112,27 @@ Template.newQuest.events({
     }
   },
   'click button.save'(e, instance) {
-    Meteor.call('quests.insert', instance.name.get(), {
-      height: instance.height.get(),
-      width: instance.width.get(),
-      map: instance.map.get(),
-      desc: $('textarea.description').val(),
-    }, function(error) {
-      console.log(arguments);
-    });
+    let qId = FlowRouter.getQueryParam('qId');
+    if (qId) {
+      Meteor.call('quests.update', qId, {
+        name: instance.name.get(),
+        height: instance.height.get(),
+        width: instance.width.get(),
+        map: instance.map.get(),
+        desc: $('textarea.description').val(),
+      }, function(error) {
+        console.log(error);
+      });
+    } else {
+      Meteor.call('quests.insert', instance.name.get(), {
+        height: instance.height.get(),
+        width: instance.width.get(),
+        map: instance.map.get(),
+        desc: $('textarea.description').val(),
+      }, function(error, result) {
+        FlowRouter.setQueryParams({qId: result});
+      });
+    }
   },
 })
 
@@ -138,6 +152,7 @@ function setWall(e, instance, value) {
 
   instance.map.set(map);
 }
+
 function drawMap(map, width, height) {
   let result = "";
   for (let y = 0; y < height; y++) {
