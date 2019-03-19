@@ -50,9 +50,13 @@ Screens:
 
 ### To install
 
+first, [install meteor](https://www.meteor.com/install)
+
+then
+
 ```
-git clone
-cd
+git clone [this repo]
+cd heroquest
 meteor
 ```
 
