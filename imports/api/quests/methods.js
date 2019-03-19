@@ -38,6 +38,15 @@ Meteor.methods({
       }
     });
   },
+  'quests.publish'(id) {
+    const quest = Quests.findOne(id);
+    if (quest.creatorId != Meteor.userId()) throw 'can only edit your own stuff, man';
+    return Quests.update(id, {
+      $set: {
+        published: true,
+      }
+    });
+  },
   'quests.command'(qId, command) {
     const quest = Quests.findOne(qId);
     var tokens = command.split(' ');

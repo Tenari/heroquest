@@ -2,6 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Quests } from '/imports/api/quests/quests.js';
+import { drawMap, xyKey } from '/imports/configs/general.js';
 import './newQuest.html';
 
 Template.newQuest.onCreated(function(){
@@ -18,7 +19,7 @@ Template.newQuest.onCreated(function(){
     this.autorun(() => {
       if (quests.ready()) {
         let quest = Quests.findOne(qId);
-        if (!quest || !Meteor.userId() || Meteor.userId() != quest.creatorId) {
+        if (!quest || !Meteor.userId() || Meteor.userId() != quest.creatorId || quest.published) {
           FlowRouter.go('/');
         }
         console.log(quest);
@@ -44,6 +45,8 @@ Template.newQuest.onCreated(function(){
     'rm rubble': 'removing rubble (click tile)',
     'add goblin': 'adding goblin (click tile)',
     'rm goblin': 'removing goblin (click tile)',
+    'add exit': 'adding exit (click tile)',
+    'rm exit': 'removing exit (click tile)',
     'add door': 'adding door (click border)',
     'rm door': 'removing door (click border)',
     'add secretdoor': 'adding secret door (click border)',
@@ -75,6 +78,14 @@ Template.newQuest.helpers({
   canSave() {
     const name = Template.instance().name.get();
     return name && name.length > 0;
+  },
+  canPublish() {
+    let qId = FlowRouter.getQueryParam('qId');
+    const instance = Template.instance();
+    const map = instance.map.get();
+    const hasExit = _.find(map, function(obj){return obj.exit;});
+    const hasSpawn = _.find(map, function(obj){return obj.spawn;});
+    return qId && hasExit && hasSpawn;
   },
   currentHoverLocation(){
     const instance = Template.instance();
@@ -142,7 +153,7 @@ Template.newQuest.events({
     const add = mode.split(' ')[0] == 'add';
     const detail = mode.split(' ')[1];
 
-    if (detail == 'spawn' || detail == 'rubble' || detail == 'goblin') {
+    if (detail == 'spawn' || detail == 'rubble' || detail == 'goblin' || detail == 'exit') {
       setMapAttribute(e, instance, detail, add);
     }
   },
@@ -160,7 +171,7 @@ Template.newQuest.events({
         width: instance.width.get(),
         map: instance.map.get(),
         desc: $('textarea.description').val(),
-      }, function(error) {
+      }, function(error, result) {
         console.log(error);
       });
     } else {
@@ -174,11 +185,16 @@ Template.newQuest.events({
       });
     }
   },
+  'click button.publish'(e, instance) {
+    let qId = FlowRouter.getQueryParam('qId');
+      Meteor.call('quests.publish', qId, function(error, result) {
+        console.log(error, result);
+        if (result && !error) {
+          FlowRouter.go('/');
+        }
+      })
+  }
 })
-
-function xyKey(x, y) {
-  return ""+x+"-"+y;
-}
 
 function setMapAttribute(e, instance, attribute, value) {
   const x = $(e.currentTarget).attr('data-x');
@@ -190,51 +206,3 @@ function setMapAttribute(e, instance, attribute, value) {
   instance.map.set(map);
 }
 
-function drawMap(map, width, height) {
-  let result = "";
-  for (let y = 0; y < height; y++) {
-    result += "<div class='map-row'>";
-      for (let x = 0; x < width; x++) {
-        let key = xyKey(x, y);
-        let classes = classNames({'map-tile': true, rubble: map[key] && map[key].rubble, goblin: map[key] && map[key].goblin});
-        result += '<div class="'+classes+'" data-x="'+x+'" data-y="'+y+'">';
-          if (map[key] && map[key].spawn) {
-            result += 'x';
-          }
-        result += '</div>';
-        result += '<div class="'+classNames({'map-border':true, wall: map[key] && map[key].rightWall})+'" data-x="'+x+'" data-y="'+y+'" data-type="right">';
-          if (map[key] && map[key].rightDoor) {
-            result += '<div class="right-door"></div>';
-          }
-          if (map[key] && map[key].rightSecretDoor) {
-            result += '<div class="right-secret-door"></div>';
-          }
-        result += '</div>';
-      }
-    result += "</div>";
-    result += "<div class='map-border-row'>";
-      for (let x = 0; x < width; x++) {
-        let key = xyKey(x, y);
-        result += '<div class="'+classNames({'map-border':true, wall: map[key] && map[key].bottomWall})+'" data-x="'+x+'" data-y="'+y+'" data-type="bottom">';
-          if (map[key] && map[key].bottomDoor) {
-            result += '<div class="bottom-door"></div>';
-          }
-          if (map[key] && map[key].bottomSecretDoor) {
-            result += '<div class="bottom-secret-door"></div>';
-          }
-        result += '</div>';
-      }
-    result += "</div>";
-  }
-  return result;
-}
-
-function classNames(obj){
-  let str = '';
-  _.each(obj, function(val, className) {
-    if (val) {
-      str += (className + ' ');
-    }
-  })
-  return str;
-}

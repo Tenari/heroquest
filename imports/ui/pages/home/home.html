@@ -24,7 +24,7 @@
       <ul>
         Published Quests:
         {{#each quest in publishedQuests}}
-          <li><a href="/quest/new?qId={{quest._id}}">edit "{{quest.name}}"</a></li>
+          <li><a href="/quest/{{quest._id}}">view "{{quest.name}}" details</a></li>
         {{/each}}
       </ul>
     </div>
