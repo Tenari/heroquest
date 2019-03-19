@@ -3,6 +3,7 @@ import { FlowRouter } from 'meteor/kadira:flow-router';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Quests } from '/imports/api/quests/quests.js';
 import { drawMap, xyKey } from '/imports/configs/general.js';
+import { MONSTERS } from '/imports/configs/monsters.js';
 import './newQuest.html';
 
 Template.newQuest.onCreated(function(){
@@ -43,8 +44,7 @@ Template.newQuest.onCreated(function(){
     'rm spawn': 'removing spawn location (click on tile)',
     'add rubble': 'adding rubble (click tile)',
     'rm rubble': 'removing rubble (click tile)',
-    'add goblin': 'adding goblin (click tile)',
-    'rm goblin': 'removing goblin (click tile)',
+    'rm monster': 'removing monster (click tile)',
     'add exit': 'adding exit (click tile)',
     'rm exit': 'removing exit (click tile)',
     'add door': 'adding door (click border)',
@@ -52,6 +52,11 @@ Template.newQuest.onCreated(function(){
     'add secretdoor': 'adding secret door (click border)',
     'rm secretdoor': 'removing secret door (click border)',
   };
+  let that = this;
+  _.each(MONSTERS, function(obj, key) {
+    that.MODES['add monster '+key] = 'adding '+key+' (click tile)';
+    that.MODES['rm monster '+key] = 'removing '+key+' (click tile)';
+  })
 })
 
 Template.newQuest.helpers({
@@ -153,8 +158,11 @@ Template.newQuest.events({
     const add = mode.split(' ')[0] == 'add';
     const detail = mode.split(' ')[1];
 
-    if (detail == 'spawn' || detail == 'rubble' || detail == 'goblin' || detail == 'exit') {
+    if (detail == 'spawn' || detail == 'rubble' || detail == 'exit') {
       setMapAttribute(e, instance, detail, add);
+    }
+    if (detail == 'monster') {
+      setMapAttribute(e, instance, detail, add && mode.split(' ')[2]);
     }
   },
   'mouseenter .map-tile'(e, instance) {

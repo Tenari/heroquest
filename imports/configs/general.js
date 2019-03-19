@@ -18,7 +18,11 @@ export function drawMap(map, width, height) {
     result += "<div class='map-row'>";
       for (let x = 0; x < width; x++) {
         let key = xyKey(x, y);
-        let classes = classNames({'map-tile': true, rubble: map[key] && map[key].rubble, goblin: map[key] && map[key].goblin, exit: map[key] && map[key].exit});
+        let classObj = {'map-tile': true, rubble: map[key] && map[key].rubble, exit: map[key] && map[key].exit};
+        if (map[key] && map[key].monster) {
+          classObj[map[key].monster] = true;
+        }
+        let classes = classNames(classObj);
         result += '<div class="'+classes+'" data-x="'+x+'" data-y="'+y+'">';
           if (map[key] && map[key].spawn) {
             result += 'x';
