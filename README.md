@@ -2,6 +2,8 @@
 
 The goal is to make a turn-based dungeon crawler Limited Multiplayer Online based off of the classic board game [HeroQuest](https://www.youtube.com/watch?v=Cx8sl2uC46A).
 
+Read the original board game [rules](http://english.yeoldeinn.com/system.php).
+
 Features:
 
 - Accounts can make multiple characters
@@ -45,3 +47,15 @@ Screens:
   - movement view
   - attack view
   - status view
+
+### To install
+
+```
+git clone
+cd
+meteor
+```
+
+that starts the server on localhost:3000
+
+Meteor servers will automatically restart themselves whenever you make code changes+save the file.
