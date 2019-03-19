@@ -23,10 +23,10 @@ Features:
 - monsters, treasure, equipment, spells, traps, etc from board game
 - turn timer to prevent AFK/disconnect
 
-Pricing:
+Pricing (haphazard ideas/brainstorming):
 
-- Free to make one character per account, costs $0.25 per character created after that (minimum $2 purchase because of credit card fees)
-- "buy the game" for $10, meaning your account has infinite of things that cost USD, whether I decide to make playing a quest cost money or not, etc.
+- Free to make one character per account, costs $0.25 per character created after that (minimum $3 purchase because of credit card fees)
+- "buy the game" for $15, meaning your account has infinite of things that cost USD, whether I decide to make playing a quest cost money or not, etc.
 - Cannot submit quests unless you have spent money
 
 Screens:
