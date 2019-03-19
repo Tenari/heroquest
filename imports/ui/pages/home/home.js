@@ -17,7 +17,10 @@ Template.App_home.helpers({
   noCharacters() {
     return Characters.find().count() == 0;
   },
-  quests(){
-    return Quests.find();
+  newQuests(){
+    return Quests.find({published: false});
+  },
+  publishedQuests(){
+    return Quests.find({published: true});
   },
 });

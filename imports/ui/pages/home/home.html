@@ -16,8 +16,14 @@
       {{/if}}
       <div><a href="/quest/new">Create a Quest</a></div>
       <ul>
-        Quests:
-        {{#each quest in quests}}
+        Un-Published Quests:
+        {{#each quest in newQuests}}
+          <li><a href="/quest/new?qId={{quest._id}}">edit "{{quest.name}}"</a></li>
+        {{/each}}
+      </ul>
+      <ul>
+        Published Quests:
+        {{#each quest in publishedQuests}}
           <li><a href="/quest/new?qId={{quest._id}}">edit "{{quest.name}}"</a></li>
         {{/each}}
       </ul>

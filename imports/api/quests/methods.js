@@ -27,7 +27,7 @@ Meteor.methods({
   },
   'quests.update'(id, details){
     const quest = Quests.findOne(id);
-    if (quest.creatorId != Meteor.userId()) throw 'can only edit your own stuff, man';
+    if (quest.creatorId != Meteor.userId() || quest.published) throw 'can only edit your own stuff, man, and it has to be un-published';
     return Quests.update(id, {
       $set: {
         name: details.name,

@@ -4,7 +4,7 @@ import { Meteor } from 'meteor/meteor';
 import { Quests } from './quests.js';
 
 Meteor.publish('quests', function () {
-  return Quests.find({});
+  return Quests.find({published: true});
 });
 Meteor.publish('myQuests', function () {
   return Quests.find({creatorId: this.userId});

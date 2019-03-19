@@ -1,10 +1,45 @@
 .map {
   width: 900px;
-  height: 408px;
+  height: 661px;
   border: 1px solid black;
   margin-left: auto;
   margin-right: auto;
   overflow: scroll;
+  .map-border {
+    position: relative;
+    background-color: rgba(0,0,0,0.1);
+    &.wall {
+      background-color: rgba(0,0,0,0.9);
+    }
+    .right-door {
+      position: absolute;
+      left: -3px;
+      background-image: url(right-door.png);
+      width: 10px;
+      height: 100%;
+    }
+    .bottom-door {
+      position: absolute;
+      top: -3px;
+      background-image: url(bottom-door.png);
+      height: 10px;
+      width: 100%;
+    }
+    .right-secret-door {
+      position: absolute;
+      left: -6px;
+      background-image: url(right-secret-door.png);
+      width: 16px;
+      height: 100%;
+    }
+    .bottom-secret-door {
+      position: absolute;
+      top: -7px;
+      background-image: url(bottom-secret-door.png);
+      height: 16px;
+      width: 100%;
+    }
+  }
   .map-row {
     display: flex;
     flex-wrap: nowrap;
@@ -12,13 +47,17 @@
     .map-tile {
       width: 32px;
       min-width: 32px;
+      background-size: cover;
+      &.rubble {
+        background-image: url(rubble.png);
+      }
+      &.goblin {
+        background-image: url(goblin.png);
+      }
     }
     .map-border {
       width: 2px;
-      background-color: rgba(0,0,0,0.1);
-      &.true {
-        background-color: rgba(0,0,0,0.9);
-      }
+      min-width: 2px;
     }
   }
   .map-border-row {
@@ -27,10 +66,7 @@
     .map-border {
       height: 2px;
       width: 34px;
-      background-color: rgba(0,0,0,0.1);
-      &.true {
-        background-color: rgba(0,0,0,0.9);
-      }
+      min-width: 34px;
     }
   }
 }

@@ -9,7 +9,7 @@ Template.newQuest.onCreated(function(){
   this.width = new ReactiveVar(26);
   this.height = new ReactiveVar(20);
 
-  // format => {"x-y": {walls:{right: true, bottom: true}}}
+  // format => {"x-y": {rightWall: true, bottomWall: true, spawn: true, rubble: true, rightDoor: true, bottomDoor: true}}
   this.map = new ReactiveVar({});
 
   let qId = FlowRouter.getQueryParam('qId');
@@ -33,10 +33,21 @@ Template.newQuest.onCreated(function(){
 
   this.commandHistory = new ReactiveVar([]);
   this.commandHistoryLocation = new ReactiveVar(1);
+  this.currentHoverLocation = new ReactiveVar(null);
   this.mode = new ReactiveVar(null);
   this.MODES = {
     'add wall': "adding walls (ctrl + mouseover to add)",
     'rm wall': "removing walls (ctrl + mouseover to remove)",
+    'add spawn': 'adding spawn location (click on tile)',
+    'rm spawn': 'removing spawn location (click on tile)',
+    'add rubble': 'adding rubble (click tile)',
+    'rm rubble': 'removing rubble (click tile)',
+    'add goblin': 'adding goblin (click tile)',
+    'rm goblin': 'removing goblin (click tile)',
+    'add door': 'adding door (click border)',
+    'rm door': 'removing door (click border)',
+    'add secretdoor': 'adding secret door (click border)',
+    'rm secretdoor': 'removing secret door (click border)',
   };
 })
 
@@ -64,6 +75,11 @@ Template.newQuest.helpers({
   canSave() {
     const name = Template.instance().name.get();
     return name && name.length > 0;
+  },
+  currentHoverLocation(){
+    const instance = Template.instance();
+    const loc = instance && instance.currentHoverLocation.get();
+    return loc && ("("+loc.x+","+loc.y+")");
   }
 })
 
@@ -103,13 +119,37 @@ Template.newQuest.events({
       instance.commandHistoryLocation.set(instance.commandHistoryLocation.curValue - 1);
     }
   },
-  'mouseenter .map-border'(e, instance) {
-    if (instance.mode.get() == 'add wall' && e.ctrlKey) {
-      setWall(e, instance, true);
+  'mouseenter/click .map-border'(e, instance) {
+    const mode = instance.mode.get();
+    const add = mode.split(' ')[0] == 'add';
+    const detail = mode.split(' ')[1];
+
+    if (detail == 'wall' && e.ctrlKey) {
+      const type = $(e.currentTarget).attr('data-type');
+      setMapAttribute(e, instance, type+'Wall', add);
     }
-    if (instance.mode.get() == 'rm wall' && e.ctrlKey) {
-      setWall(e, instance, false);
+    if (detail == 'door' && e.type == 'click') {
+      const type = $(e.currentTarget).attr('data-type');
+      setMapAttribute(e, instance, type+'Door', add);
     }
+    if (detail == 'secretdoor' && e.type == 'click') {
+      const type = $(e.currentTarget).attr('data-type');
+      setMapAttribute(e, instance, type+'SecretDoor', add);
+    }
+  },
+  'click .map-tile'(e, instance) {
+    const mode = instance.mode.get();
+    const add = mode.split(' ')[0] == 'add';
+    const detail = mode.split(' ')[1];
+
+    if (detail == 'spawn' || detail == 'rubble' || detail == 'goblin') {
+      setMapAttribute(e, instance, detail, add);
+    }
+  },
+  'mouseenter .map-tile'(e, instance) {
+    const x = $(e.currentTarget).attr('data-x');
+    const y = $(e.currentTarget).attr('data-y');
+    instance.currentHoverLocation.set({x: x, y: y});
   },
   'click button.save'(e, instance) {
     let qId = FlowRouter.getQueryParam('qId');
@@ -140,16 +180,13 @@ function xyKey(x, y) {
   return ""+x+"-"+y;
 }
 
-function setWall(e, instance, value) {
+function setMapAttribute(e, instance, attribute, value) {
   const x = $(e.currentTarget).attr('data-x');
   const y = $(e.currentTarget).attr('data-y');
-  const type = $(e.currentTarget).attr('data-type');
   const key = xyKey(x, y);
   let map = instance.map.get();
   if (!map[key]) map[key] = {};
-  if (!map[key].walls) map[key].walls = {};
-  map[key].walls[type] = value;
-
+  map[key][attribute] = value;
   instance.map.set(map);
 }
 
@@ -159,20 +196,45 @@ function drawMap(map, width, height) {
     result += "<div class='map-row'>";
       for (let x = 0; x < width; x++) {
         let key = xyKey(x, y);
-        let tile = map[key];
-        let wallRight = tile && tile.walls && tile.walls.right;
-        result += "<div class='map-tile'></div>";
-        result += '<div class="map-border '+wallRight+'" data-x="'+x+'" data-y="'+y+'" data-type="right"></div>';
+        let classes = classNames({'map-tile': true, rubble: map[key] && map[key].rubble, goblin: map[key] && map[key].goblin});
+        result += '<div class="'+classes+'" data-x="'+x+'" data-y="'+y+'">';
+          if (map[key] && map[key].spawn) {
+            result += 'x';
+          }
+        result += '</div>';
+        result += '<div class="'+classNames({'map-border':true, wall: map[key] && map[key].rightWall})+'" data-x="'+x+'" data-y="'+y+'" data-type="right">';
+          if (map[key] && map[key].rightDoor) {
+            result += '<div class="right-door"></div>';
+          }
+          if (map[key] && map[key].rightSecretDoor) {
+            result += '<div class="right-secret-door"></div>';
+          }
+        result += '</div>';
       }
     result += "</div>";
     result += "<div class='map-border-row'>";
       for (let x = 0; x < width; x++) {
         let key = xyKey(x, y);
-        let tile = map[key];
-        let wallBottom = tile && tile.walls && tile.walls.bottom;
-        result += '<div class="map-border '+wallBottom+'" data-x="'+x+'" data-y="'+y+'" data-type="bottom"></div>';
+        result += '<div class="'+classNames({'map-border':true, wall: map[key] && map[key].bottomWall})+'" data-x="'+x+'" data-y="'+y+'" data-type="bottom">';
+          if (map[key] && map[key].bottomDoor) {
+            result += '<div class="bottom-door"></div>';
+          }
+          if (map[key] && map[key].bottomSecretDoor) {
+            result += '<div class="bottom-secret-door"></div>';
+          }
+        result += '</div>';
       }
     result += "</div>";
   }
   return result;
+}
+
+function classNames(obj){
+  let str = '';
+  _.each(obj, function(val, className) {
+    if (val) {
+      str += (className + ' ');
+    }
+  })
+  return str;
 }
