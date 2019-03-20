@@ -2,6 +2,14 @@ export function xyKey(x, y) {
   return ""+x+"-"+y;
 }
 
+export function xFromKey(key) {
+  return parseInt(key.split('-')[0]);
+}
+
+export function yFromKey(key) {
+  return parseInt(key.split('-')[1]);
+}
+
 function classNames(obj){
   let str = '';
   _.each(obj, function(val, className) {
@@ -163,12 +171,51 @@ export function computeDifficulty(quest, MONSTERS) {
   return difficulty;
 }
 
-export function makeTilesVisible(map, locationKeys) {
+// locationKeys represent key xy pairs for characters
+export function makeTilesVisible(map, height, width, locationKeys) {
   _.each(locationKeys, function(key){
-    const x = key.split('-')[0];
-    const y = key.split('-')[1];
+    const x = xFromKey(key);
+    const y = yFromKey(key);
     if(!map[key]) map[key] = {};
     map[key].visible = true;
+    
+    map = checkCardinalDirections(map, height, width, x, y, {});
   })
   return map;
+}
+
+function checkCardinalDirections(map, height, width, x, y, alreadyChecked) {
+  if(alreadyChecked[xyKey(x,y)]) return map;
+  alreadyChecked[xyKey(x,y)] = true;
+
+  //check the 4 cardinal directions
+  _.each([
+    {checkX: x, checkY: y-1, newX: x, newY: y-1, direction: 'bottom'}, // north
+    {checkX: x, checkY: y, newX: x, newY: y+1, direction: 'bottom'},   // south
+    {checkX: x, checkY: y, newX: x+1, newY: y, direction: 'right'},    // east
+    {checkX: x-1, checkY: y, newX: x-1, newY: y, direction: 'right'},  // west
+  ], function(details){
+    const checkKey = xyKey(details.checkX, details.checkY);
+    const key = xyKey(details.newX, details.newY);
+    if (!map[key]) map[key] = {};
+    map[key].visible = isTileVisible(map[checkKey], details.direction);
+    if (map[key].visible && details.newY < height && details.newY >= 0 && details.newX < width && details.newX >= 0) {
+      map = checkCardinalDirections(map, height, width, details.newX, details.newY, alreadyChecked);
+    }
+  })
+
+  return map;
+}
+
+function isTileVisible(tile, direction) {
+  let visible = true;
+  if (tile) {
+    if (tile[direction+'Door'] && !tile[direction+'DoorOpen']) { // closed door
+      visible = false;
+    }
+    if (tile[direction+'Wall'] && !tile[direction+'Door']){ // wall without a door
+      visible = false;
+    }
+  }
+  return visible;
 }

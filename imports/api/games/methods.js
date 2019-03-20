@@ -23,7 +23,7 @@ Meteor.methods({
       }
     })
 
-    let map = makeTilesVisible(quest.map, spawns);
+    let map = makeTilesVisible(quest.map, quest.height, quest.width, spawns);
     map = spawnCharacters(map, characters, spawns);
 
     gId = Games.insert({
