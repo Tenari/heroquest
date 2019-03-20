@@ -6,8 +6,8 @@ export const CARICATURES = {
     attack: 3,
     defense: 2,
     move: 7,
-    mind: 2,
-    body: 8,
+    sanity: 2,
+    health: 8,
   },
   dwarf: {
     key: 'dwarf',
@@ -16,8 +16,8 @@ export const CARICATURES = {
     attack: 2,
     defense: 2,
     move: 6,
-    mind: 3,
-    body: 7,
+    sanity: 3,
+    health: 7,
   },
   wizard: {
     key: 'wizard',
@@ -26,8 +26,8 @@ export const CARICATURES = {
     attack: 1,
     defense: 2,
     move: 7,
-    mind: 6,
-    body: 4,
+    sanity: 6,
+    health: 4,
   },
   elf: {
     key: 'elf',
@@ -36,7 +36,7 @@ export const CARICATURES = {
     attack: 2,
     defense: 2,
     move: 8,
-    mind: 4,
-    body: 6,
+    sanity: 4,
+    health: 6,
   },
 }
