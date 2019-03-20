@@ -12,10 +12,12 @@ Meteor.methods({
       userId: Meteor.userId(),
       name,
       key,
+
       mind: caricature.mind,
       mindMax: caricature.mind,
       body: caricature.body,
       bodyMax: caricature.body,
+      dead: false,
 
       baseAttack: caricature.attack,
       baseDefense: caricature.defense,
@@ -24,6 +26,8 @@ Meteor.methods({
       cp: 0,
       sp: 0,
       gp: 0,
+
+      inGame: false,
     });
   },
   'characters.move'(cId, direction) {

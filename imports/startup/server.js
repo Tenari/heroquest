@@ -1,7 +1,7 @@
 // Register your apis here
 
 import '../api/games/methods.js';
-import '../api/games/server/publications.js';
+import '../api/games/publications.js';
 
 import '../api/quests/methods.js';
 import '../api/quests/publications.js';

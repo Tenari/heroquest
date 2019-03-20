@@ -1,5 +1,5 @@
- @light-font: #F0E5A1;
- @dark-bg: #222;
+@import 'imports.less';
+
 form.new-character-form {
   font-family: 'Fondamento', serif;
   background-color: @dark-bg;
@@ -78,12 +78,8 @@ form.new-character-form {
   margin-right: auto;
   margin-top: 50px;
   margin-bottom: 50px;
-  border: 10px solid transparent;
-  padding: 15px;
-  -webkit-border-image: url(parchment-border.jpg) 30 round; /* Safari 3.1-5 */
-  -o-border-image: url(parchment-border.jpg) 30 round; /* Opera 11-12.1 */
-  border-image: url(parchment-border.jpg) 30 round;
   font-family: 'Fondamento', serif;
+  .parchment-box();
 
   .name {
     text-align: center;
@@ -98,11 +94,7 @@ form.new-character-form {
     margin-bottom: 20px;
   }
   .box {
-    border: 10px solid transparent;
-    padding: 15px;
-    -webkit-border-image: url(parchment-border.jpg) 30 round; /* Safari 3.1-5 */
-    -o-border-image: url(parchment-border.jpg) 30 round; /* Opera 11-12.1 */
-    border-image: url(parchment-border.jpg) 30 round;
+    .parchment-box();
     flex-grow: 2;
     margin-bottom: 5px;
 

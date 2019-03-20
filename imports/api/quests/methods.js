@@ -8,6 +8,21 @@ import { EventNotices } from '../eventNotices/eventNotices.js';
 import { EventLogs } from '../eventLogs/eventLogs.js';
 //import { CR_TO_XP, roll, abilityModifier, advantageRoll } from '../../configs/general.js';
 
+function cleanMapObj(map) {
+  let newMap = {};
+  _.each(map, function(tile, key){
+    if (_.find(_.values(tile), function(val){return val;})) { // if there is actually positive data here (not just 'false')
+      let newTile = {};
+      _.each(tile, function(val, attr) {
+        if(val) {
+          newTile[attr] = val;
+        }
+      })
+      newMap[key] = newTile;
+    }
+  })
+  return newMap;
+}
 
 Meteor.methods({
   'quests.insert'(name, details) {
@@ -20,7 +35,7 @@ Meteor.methods({
       name,
       height: details.height,
       width: details.width,
-      map: details.map,
+      map: cleanMapObj(details.map),
       desc: details.desc,
       createdAt: new Date(),
     });
@@ -33,7 +48,7 @@ Meteor.methods({
         name: details.name,
         height: details.height,
         width: details.width,
-        map: details.map,
+        map: cleanMapObj(details.map),
         desc: details.desc,
       }
     });

@@ -1,0 +1,14 @@
+<template name="Quest_show">
+  <div class="full-quest-details">
+    <div class="name-and-description">
+      <div class="name-container">{{quest.name}}</div>
+      <div class="description-container">{{quest.desc}}</div>
+    </div>
+    <div class="gameplay-details">
+      <div class="difficulty">Difficulty: {{quest.difficulty}}</div>
+    </div>
+    <div class="">
+      <a href="/quest/{{quest._id}}/play" class="play-quest">Play Quest</a>
+    </div>
+  </div>
+</template>

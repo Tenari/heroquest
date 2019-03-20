@@ -1,0 +1,22 @@
+<template name="Quest_play">
+  <div class="quest-lobby">
+    <div class="name-container">{{quest.name}}</div>
+    <div class="gameplay-details">
+      This quest takes up to {{quest.maxPlayers}} players. Your party currently has {{partyCount}} members.
+    </div>
+    <div class="party-managment">
+      <div>Add your character: {{> dropdown options=characterChoices className='character-choice'}} <button class="add-me">Add</button></div>
+      <div class="party-list">
+        Party:
+        {{#each member in party}}
+          <div>{{member.name}} ({{member.caricatureName}})</div>
+        {{/each}}
+      </div>
+    </div>
+    {{#if canStartQuest}}
+    <div>
+      <button class="start-game">Start Game</button>
+    </div>
+    {{/if}}
+  </div>
+</template>

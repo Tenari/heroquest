@@ -54,3 +54,121 @@ export function drawMap(map, width, height) {
   }
   return result;
 };
+
+export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
+  let html = "";
+  const viewH = viewport.height;
+  const viewW = viewport.width;
+  let drawX = parseInt(viewport.width/2) -1;
+  let drawY = parseInt(viewport.height/2) -1;
+
+  // (s_x, s_y) represents (0,0) from character's point of view
+  let s_x = charLoc.x - drawX;
+  let s_y = charLoc.y - drawY;
+
+  // However, we gotta do some edge detection:
+  // normal (big) room cases
+  // Check if too close to top edge.
+  if (charLoc.y < (drawY-1)) {
+    drawY = charLoc.y;
+    s_y = 0;
+  }
+  // Too close to bottom
+  else if (charLoc.y > (height - (viewH - drawY))) { // rows visible below.
+    drawY = viewH - (height - charLoc.y);
+    s_y = charLoc.y - drawY;
+  }
+
+  // Check if too close to left edge
+  if (charLoc.x < drawX) {
+    s_x = 0;
+    drawX = charLoc.x;
+  }
+  // right edge
+  else if (charLoc.x > (width - (viewW - drawX))) {
+    drawX = viewW - (width - charLoc.x);
+    s_x = charLoc.x - drawX;
+  }
+
+  // small room cases
+  if (width <= viewW){
+    drawX = charLoc.x;
+    s_x = 0;
+  }
+  if (height <= viewH){
+    drawY = charLoc.y;
+    s_y = 0;
+  }
+
+  var tile, visible;
+  for(let i = 0; i < viewH; i++){
+    html += "<div class='map-row'>";
+      for (let j = 0; j < viewW; j++){
+        let key = xyKey(j+s_x, i+s_y);
+        tile = map[key];
+        visible = tile && tile.visible;
+        let classObj = {
+          'map-tile': true,
+          rubble: visible && tile.rubble,
+          exit: visible && tile.exit,
+          'not-visible': !visible,
+        };
+        if (visible && tile.monster) {
+          classObj[tile.monster] = true;
+        }
+        let classes = classNames(classObj);
+
+        html += '<div class="'+classes+'" data-x="'+(j+s_x)+'" data-y="'+(i+s_y)+'">';
+          if (visible && tile.character) {
+            html += '<div class="character '+tile.character.key+'"></div>';
+          }
+        html += '</div>';
+        html += '<div class="'+classNames({'map-border':true, wall: visible && tile.rightWall})+'">';
+          if (visible && tile.rightDoor) {
+            html += '<div class="right-door"></div>';
+          }
+          if (false && visible && tile.rightSecretDoor) {
+            html += '<div class="right-secret-door"></div>';
+          }
+        html += '</div>';
+      }
+    html += "</div>";
+    html += "<div class='map-border-row'>";
+      for (let x = 0; x < viewW; x++) {
+        let key = xyKey(x+s_x, i+s_y);
+        visible = map[key] && map[key].visible;
+        html += '<div class="'+classNames({'map-border':true, wall: visible && map[key].bottomWall})+'">';
+          if (visible && map[key].bottomDoor) {
+            html += '<div class="bottom-door"></div>';
+          }
+          if (false && visible && map[key].bottomSecretDoor) {
+            html += '<div class="bottom-secret-door"></div>';
+          }
+        html += '</div>';
+      }
+    html += "</div>";
+  }
+
+  return html;
+}
+
+export function computeDifficulty(quest, MONSTERS) {
+  let difficulty = 0;
+  _.each(quest.map, function(tile, key){
+    if (tile.monster) {
+      const monster = MONSTERS[tile.monster];
+      difficulty += ((2*(monster.attack + monster.defend)) + monster.move + monster.body);
+    }
+  })
+  return difficulty;
+}
+
+export function makeTilesVisible(map, locationKeys) {
+  _.each(locationKeys, function(key){
+    const x = key.split('-')[0];
+    const y = key.split('-')[1];
+    if(!map[key]) map[key] = {};
+    map[key].visible = true;
+  })
+  return map;
+}

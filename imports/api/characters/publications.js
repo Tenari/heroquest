@@ -13,3 +13,8 @@ Meteor.publish('characters.id', function (id) {
 
   return Characters.find({userId: this.userId, _id: id});
 });
+Meteor.publish('characters.game', function (gId) {
+  if (!this.userId) return this.ready();
+
+  return Characters.find({inGame: gId});
+});
