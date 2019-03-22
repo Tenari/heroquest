@@ -29,6 +29,8 @@ Meteor.methods({
     gId = Games.insert({
       questId: qId,
       characterIds: party,
+      currentTurn: party[0],
+      turn: _.find(characters, function(c){return c._id == party[0]}).freshTurn(),
       map: map,
       height: quest.height,
       width: quest.width,
@@ -40,6 +42,22 @@ Meteor.methods({
       }});
     })
     return gId;
+  },
+  'games.endTurn'(gId) {
+    const game = Games.findOne(gId);
+    if (!game) throw 'invalid game id';
+    const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
+    if(!character || character._id != game.currentTurn) throw 'fuck off';
+
+    let nextTurn = game.characterIds.indexOf(game.currentTurn) + 1;
+    if (nextTurn >= game.characterIds.length) {
+      // TODO: monsters take a turn
+      nextTurn = 0;
+    }
+    Games.update(gId, {$set: {
+      currentTurn: game.characterIds[nextTurn],
+      turn: Characters.findOne(game.characterIds[nextTurn]).freshTurn(),
+    }});
   },
 });
 

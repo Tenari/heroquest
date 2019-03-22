@@ -115,6 +115,8 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
         let key = xyKey(j+s_x, i+s_y);
         tile = map[key];
         visible = tile && tile.visible;
+        let visKey = xyKey(j+s_x+1, i+s_y);
+        let wallVisible = visible || (map[visKey] && map[visKey].visible);
         let classObj = {
           'map-tile': true,
           rubble: visible && tile.rubble,
@@ -131,11 +133,11 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
             html += '<div class="character '+tile.character.key+'"></div>';
           }
         html += '</div>';
-        html += '<div class="'+classNames({'map-border':true, wall: visible && tile.rightWall})+'">';
-          if (visible && tile.rightDoor) {
-            html += '<div class="right-door"></div>';
+        html += '<div class="'+classNames({'map-border':true, wall: wallVisible && tile && tile.rightWall})+'">';
+          if (wallVisible && tile && tile.rightDoor) {
+            html += '<div class="right-door '+(tile.rightDoorOpen ? 'open-door' : '')+'"></div>';
           }
-          if (false && visible && tile.rightSecretDoor) {
+          if (false && wallVisible && tile && tile.rightSecretDoor) {
             html += '<div class="right-secret-door"></div>';
           }
         html += '</div>';
@@ -144,12 +146,13 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
     html += "<div class='map-border-row'>";
       for (let x = 0; x < viewW; x++) {
         let key = xyKey(x+s_x, i+s_y);
-        visible = map[key] && map[key].visible;
-        html += '<div class="'+classNames({'map-border':true, wall: visible && map[key].bottomWall})+'">';
-          if (visible && map[key].bottomDoor) {
+        let visKey = xyKey(x+s_x, i+s_y+1);
+        visible = (map[visKey] && map[visKey].visible) || (map[key] && map[key].visible);
+        html += '<div class="'+classNames({'map-border':true, wall: visible && map[key] && map[key].bottomWall})+'">';
+          if (visible && map[key] && map[key].bottomDoor) {
             html += '<div class="bottom-door"></div>';
           }
-          if (false && visible && map[key].bottomSecretDoor) {
+          if (false && visible && map[key] && map[key].bottomSecretDoor) {
             html += '<div class="bottom-secret-door"></div>';
           }
         html += '</div>';
@@ -218,4 +221,90 @@ function isTileVisible(tile, direction) {
     }
   }
   return visible;
+}
+
+// returns an array of location objects that are adjacent to the passed in location or locationKey
+export function adjacentLocations(loc){
+  var x, y;
+  if (_.isString(loc)) { // input is keys
+    x = xFromKey(loc);
+    y = yFromKey(loc);
+  } else { // input is {x,y} objects
+    x = loc.x;
+    y = loc.y;
+  }
+  return [{x:x-1, y:y}, {x:x+1, y:y}, {x:x, y:y-1}, {x:x, y:y+1}];
+}
+
+// returns a map of location objects that should be checked (for walls/doors/boundaries) from the given loc or locationKey
+export function adjacentBoundaryLocations(loc){
+  var x, y;
+  if (_.isString(loc)) { // input is keys
+    x = xFromKey(loc);
+    y = yFromKey(loc);
+  } else { // input is {x,y} objects
+    x = loc.x;
+    y = loc.y;
+  }
+  return {
+    north: {x:x, y:y-1, direction: 'bottom', key: xyKey(x, y-1)},
+    south: {x:x, y:y, direction: 'bottom', key: xyKey(x, y)}, 
+    east:  {x:x, y:y, direction: 'right', key: xyKey(x, y)}, 
+    west:  {x:x-1, y:y, direction: 'right', key: xyKey(x-1, y)}
+  };
+}
+
+export const ACTIONS = {
+  attack: {
+    key: 'attack',
+    label: 'Attack',
+    test: function(game, character) {
+      // return true if you are adjacent to a monster
+      return false;
+    },
+  },
+  spell: {
+    key: 'spell',
+    label: 'Cast Spell',
+    test: function(game, character) {
+      // return true if you have spells remaining
+      return false;
+    },
+  },
+  door: {
+    key: 'door',
+    label: 'Open Door',
+    test: function(game, character) {
+      // return true if you are adjacent to an unopened door and have at least 1 move left
+      return _.find(adjacentBoundaryLocations(game.characterLocation(character._id)), function(loc, direction){
+        const tile = game.map[loc.key];
+        return tile && tile[loc.direction+'Door'] && !tile[loc.direction+'DoorOpen'] && game.turn.moves > 0;
+      })
+    },
+    // params: {direction: 'north'|'south'|'east'|'west'}
+    perform: function(game, character, params, collections) {
+      const charLoc = game.characterLocation(character._id);
+      const doorLoc = adjacentBoundaryLocations(charLoc)[params.direction];
+      game.map[doorLoc.key][doorLoc.direction+'DoorOpen'] = true;
+      game.map = makeTilesVisible(game.map, game.height, game.width, [xyKey(charLoc.x, charLoc.y)]);
+      game.turn.moves -= 1;
+      collections.Games.update(game._id, {$set: {map: game.map, turn: game.turn}});
+    },
+    selectsDirection: true,
+    directions: 'Press W, A, S, or D to indicate which direction the door you\'d like to open is.',
+  },
+  treasure: {
+    key: 'treasure',
+    label: 'Search for treasure',
+    test: function(game, character) {
+      return true;
+    },
+  },
+  secrets: {
+    key: 'secrets',
+    label: 'Search for doors/traps',
+    test: function(game, character) {
+      return true;
+    },
+  },
 }

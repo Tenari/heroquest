@@ -8,8 +8,9 @@
   margin-right: auto;
   overflow:hidden;
   .map-tile {
+    position: relative;
     &.not-visible {
-      background-color: black;
+      background-color: rgba(0,0,0,0.1);
     }
   }
   .map-row {
@@ -21,6 +22,8 @@
         height: 100%;
         width: 100%;
         background-size: cover;
+        position: absolute;
+        z-index: 2;
         &.barbarian {
           background-image: url(img/barbarian.png);
         }
@@ -29,6 +32,14 @@
     .map-border {
       width: 3px;
       min-width: 3px;
+      .right-door.open-door {
+        left: -25px;
+        top: -13px;
+        transform: rotate(60deg);
+        z-index: 1;
+        background-size: cover;
+        width: 16px;
+      }
     }
   }
   .map-border-row {

@@ -1,6 +1,20 @@
 <template name="Game_play">
   <div class="play-game-container">
-    <div class="turn-info"></div>
+    <div class="turn-info">
+      {{#if myTurn}}
+        {{game.turn.moves}} spaces left to move
+        <button class="end-turn">End turn</button>
+        {{#if canAct}}
+          <div>
+            {{#each action in availableActions}}
+              <button class="action" data-key="{{action.key}}">{{action.label}}</button>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{else}}
+        not your turn
+      {{/if}}
+    </div>
     <div class="map player-map">
       {{{mapHTML}}}
     </div>

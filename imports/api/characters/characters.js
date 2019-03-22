@@ -28,5 +28,11 @@ Characters.helpers({
   },
   caricatureName() {
     return this.caricature().name;
+  },
+  freshTurn() {
+    return {
+      moves: this.baseMove,
+      hasActed: false,
+    }
   }
 })

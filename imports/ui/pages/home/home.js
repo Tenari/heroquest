@@ -23,4 +23,11 @@ Template.App_home.helpers({
   publishedQuests(){
     return Quests.find({published: true});
   },
+  characterLink(character){
+    if (character.inGame) {
+      return '/game/'+character.inGame;
+    } else {
+      return '/character/'+character._id;
+    }
+  },
 });
