@@ -21,4 +21,22 @@ Template.character_sheet.helpers({
   character() {
     return Template.instance().character.get();
   },
+  hearts() {
+    return hpIcons('body', 'heart');
+  },
+  brains() {
+    return hpIcons('mind', 'brain');
+  }
 })
+
+function hpIcons(statKey, iconKey) {
+  let character = Characters.findOne(FlowRouter.getParam('cid'));
+  let icons = [];
+  _.times(character[statKey], function(){
+    icons.push({klass: iconKey});
+  })
+  _.times(character[statKey+'Max'] - character[statKey], function(){
+    icons.push({klass: 'empty-'+iconKey});
+  })
+  return icons;
+}

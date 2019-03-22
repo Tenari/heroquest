@@ -107,6 +107,26 @@ form.new-character-form {
       text-align: center;
       font-family: "Courier New", Courier, monospace;
       font-weight: bold;
+      display: flex;
+      justify-content: center;
+      .icon {
+        width: 16px;
+        height: 16px;
+        margin: 2px;
+        background-size: cover;
+        &.heart {
+          background-image: url(heart.png);
+        }
+        &.empty-heart {
+          background-image: url(empty-heart.png);
+        }
+        &.brain {
+          background-image: url(brain.png);
+        }
+        &.empty-brain {
+          background-image: url(empty-brain.png);
+        }
+      }
     }
     .dice {
       height: 70px;
@@ -117,5 +137,4 @@ form.new-character-form {
       font-size: 20px;
     }
   }
-
 }

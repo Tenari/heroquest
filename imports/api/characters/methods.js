@@ -15,10 +15,10 @@ Meteor.methods({
       name,
       key,
 
-      sanity: caricature.sanity,
-      sanityMax: caricature.sanity,
-      health: caricature.health,
-      healthMax: caricature.health,
+      mind: caricature.mind,
+      mindMax: caricature.mind,
+      body: caricature.body,
+      bodyMax: caricature.body,
       dead: false,
 
       baseAttack: caricature.attack,

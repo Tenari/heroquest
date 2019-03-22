@@ -4,12 +4,20 @@
     <div class="caricature">{{character.caricatureName}}</div>
     <div class="row">
       <div class="box">
-        <div class="title">Sanity</div>
-        <div class="value">{{character.sanity}} / {{character.sanityMax}}</div>
+        <div class="title">Intellect</div>
+        <div class="value">
+          {{#each brain in brains}}
+            <div class="icon {{brain.klass}}"></div>
+          {{/each}}
+        </div>
       </div>
       <div class="box">
-        <div class="title">Health</div>
-        <div class="value">{{character.health}} / {{character.healthMax}}</div>
+        <div class="title">Vitality</div>
+        <div class="value">
+          {{#each heart in hearts}}
+            <div class="icon {{heart.klass}}"></div>
+          {{/each}}
+        </div>
       </div>
     </div>
     <div class="row">

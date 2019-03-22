@@ -77,11 +77,11 @@ Template.Game_play.events({
     const gId = FlowRouter.getParam('gId');
     const character = Characters.findOne({userId: Meteor.userId(), inGame: gId});
     if (action.selectsDirection) {
-      instance.selectingDirection.set(true);
+      instance.selectingDirection.set(action.directions);
       instance.directionResponse = function(direction) {
+        instance.selectingDirection.set(false);
         Meteor.call('characters.action', character._id, action.key, {direction});
       }
-      alert(action.directions);
     } else {
       Meteor.call('characters.action', character._id, action.key, null);
     }

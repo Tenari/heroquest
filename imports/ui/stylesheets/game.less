@@ -27,18 +27,31 @@
         &.barbarian {
           background-image: url(img/barbarian.png);
         }
+        &.dwarf {
+          background-image: url(img/dwarf.png);
+        }
+        &.wizard {
+          background-image: url(img/wizard.png);
+        }
+        &.elf {
+          background-image: url(img/elf.png);
+        }
       }
     }
     .map-border {
       width: 3px;
       min-width: 3px;
-      .right-door.open-door {
-        left: -25px;
-        top: -13px;
-        transform: rotate(60deg);
-        z-index: 1;
+      .right-door {
         background-size: cover;
         width: 16px;
+        left: -6px;
+      }
+      .right-door.open-door {
+        left: -55px;
+        top: 0;
+        z-index: 1;
+        width: 64px;
+        background-image: url(right-door-open.png);
       }
     }
   }

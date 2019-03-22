@@ -168,7 +168,7 @@ export function computeDifficulty(quest, MONSTERS) {
   _.each(quest.map, function(tile, key){
     if (tile.monster) {
       const monster = MONSTERS[tile.monster];
-      difficulty += ((2*(monster.attack + monster.defend)) + monster.move + monster.health + monster.sanity);
+      difficulty += ((2*(monster.attack + monster.defend)) + monster.move + monster.body + monster.mind);
     }
   })
   return difficulty;

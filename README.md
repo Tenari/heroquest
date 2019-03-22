@@ -13,8 +13,8 @@ Features:
 - Quests can be forked from an unlocked quest in order to make a new version for you to publish
 - Every time a character completes a account-created Quest for the first time, the account which created that Quest is rewarded with gold/account USD balance
 - characters persist between quests
-- characters perma-die when their sanity or health points go to zero during a quest.
-- characters reset to full sanity + health points at end of each quest they complete
+- characters perma-die when their Intellect or Vitality points go to zero during a quest.
+- characters reset to full Intellect + Vitality points at end of each quest they complete
 - characters can form parties of up to 4 players to tackle a quest
 - leaderboard of characters that have completed the most quests/the most dangerous quests
 - intuitive WASD movement
