@@ -15,8 +15,17 @@
         not your turn
       {{/if}}
     </div>
-    <div class="map player-map">
+    <div class="map player-map {{selectingTarget}}">
       {{{mapHTML}}}
     </div>
   </div>
+
+  {{#if currentEventNotice}}
+    <div class="event-notice-container">
+      <div class="event-notice">
+        <div class="message">{{currentEventNotice.message}}</div>
+        <button data-eid="{{currentEventNotice._id}}">Close</button>
+      </div>
+    </div>
+  {{/if}}
 </template>

@@ -26,7 +26,13 @@ Template.character_sheet.helpers({
   },
   brains() {
     return hpIcons('mind', 'brain');
-  }
+  },
+  attack() {
+    return combatIcons('baseAttack','attack');
+  },
+  defense() {
+    return combatIcons('baseDefense','shield');
+  },
 })
 
 function hpIcons(statKey, iconKey) {
@@ -37,6 +43,15 @@ function hpIcons(statKey, iconKey) {
   })
   _.times(character[statKey+'Max'] - character[statKey], function(){
     icons.push({klass: 'empty-'+iconKey});
+  })
+  return icons;
+}
+
+function combatIcons(statKey, iconKey) {
+  let character = Characters.findOne(FlowRouter.getParam('cid'));
+  let icons = [];
+  _.times(character[statKey], function(){
+    icons.push({klass: iconKey});
   })
   return icons;
 }

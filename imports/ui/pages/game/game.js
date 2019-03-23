@@ -4,18 +4,19 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { Quests } from '/imports/api/quests/quests.js';
 import { Characters } from '/imports/api/characters/characters.js';
 import { Games } from '/imports/api/games/games.js';
+import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
 import { drawPlayerViewOfMap, ACTIONS } from '/imports/configs/general.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
 import './game.html';
 
 Template.Game_play.onCreated(function() {
-  this.selectingDirection = new ReactiveVar(false);
-  this.directionResponse = function(){};
+  this.selectingTarget = new ReactiveVar(false);
   const gId = FlowRouter.getParam('gId');
 
   $('body').on('keypress', keyMove(gId, this));
   var games = this.subscribe('game', gId);
   this.subscribe('characters.game', gId);
+  this.subscribe('eventNotices.me', gId);
 
   this.autorun(() => {
     if (games.ready()) {
@@ -34,9 +35,15 @@ Template.Game_play.onDestroyed(function(){
 })
 
 Template.Game_play.helpers({
+  currentEventNotice() {
+    return EventNotices.findOne();
+  },
   game() {
     const gId = FlowRouter.getParam('gId');
     return Games.findOne(gId);
+  },
+  selectingTarget(){
+    return Template.instance().selectingTarget.get() ? 'selecting-target' : '';
   },
   mapHTML() {
     const gId = FlowRouter.getParam('gId');
@@ -75,17 +82,27 @@ Template.Game_play.events({
   'click button.action'(e, instance) {
     const action = ACTIONS[$(e.currentTarget).attr('data-key')];
     const gId = FlowRouter.getParam('gId');
-    const character = Characters.findOne({userId: Meteor.userId(), inGame: gId});
-    if (action.selectsDirection) {
-      instance.selectingDirection.set(action.directions);
-      instance.directionResponse = function(direction) {
-        instance.selectingDirection.set(false);
-        Meteor.call('characters.action', character._id, action.key, {direction});
-      }
+    if (action.selectsTarget) {
+      instance.selectingTarget.set(action.key);
     } else {
-      Meteor.call('characters.action', character._id, action.key, null);
+      Meteor.call('characters.action', gId, action.key, null);
     }
-  }
+  },
+  'click .event-notice>button'(e,instance) {
+    const redirect = EventNotices.findOne().redirect;
+    Meteor.call('eventNotice.viewed', $(e.currentTarget).attr('data-eid'), function(){
+      if (redirect) {
+        FlowRouter.go(redirect);
+      }
+    });
+  },
+  'click .selecting-target .map-tile'(e,instance) {
+    const x = parseInt($(e.currentTarget).attr('data-x'));
+    const y = parseInt($(e.currentTarget).attr('data-y'));
+    const gId = FlowRouter.getParam('gId');
+    Meteor.call('characters.action', gId, instance.selectingTarget.curValue, {x:x, y:y});
+    instance.selectingTarget.set(false);
+  },
 })
 
 function keyMove(gId, instance){
@@ -98,9 +115,5 @@ function keyMove(gId, instance){
     */
     const direction = {119: 'north', 115: 'south', 100: 'east', 97: 'west'}[e.keyCode];
     Meteor.call('characters.move', gId, direction);
-    if (instance.selectingDirection.curValue) {
-      instance.directionResponse(direction);
-      instance.directionResponse = function(){};
-    }
   }
 }

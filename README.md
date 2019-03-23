@@ -4,7 +4,7 @@ The goal is to make a turn-based dungeon crawler Limited Multiplayer Online base
 
 Read the original board game [rules](http://english.yeoldeinn.com/system.php).
 
-Features:
+#### Features
 
 - Accounts can make multiple characters
 - Accounts can make "quests" (dungeon scenarios), which are automatically ranked by difficulty
@@ -23,13 +23,13 @@ Features:
 - monsters, treasure, equipment, spells, traps, etc from board game
 - turn timer to prevent AFK/disconnect
 
-Pricing (haphazard ideas/brainstorming):
+#### Pricing (haphazard ideas/brainstorming)
 
 - Free to make one character per account, costs $0.25 per character created after that (minimum $3 purchase because of credit card fees)
 - "buy the game" for $15, meaning your account has infinite of things that cost USD, whether I decide to make playing a quest cost money or not, etc.
 - Cannot submit quests unless you have spent money
 
-Screens:
+#### Screens
 
 - advertising/landing page
 - account creation
@@ -48,7 +48,28 @@ Screens:
   - attack view
   - status view
 
-### To install
+#### Combat
+
+1. When adjacent to an enemy, click [Attack]
+2. Then click the enemy to confirm your target.
+3. The view will change to combat mode.
+4. Animation of attacker attempting his first strike. either miss, block, or hit.
+5. Either animation of defender doing nothing, or blocking, or being injured.
+7. repeat process until attacker has no more strikes
+
+#### Mind:
+
+1. some rules should go here
+
+#### Treasure
+
+- Each room can only be searched for treasure once.
+  - the game will have to know about each room, which means each room will need an id of some kind
+- Each room can have either a specific treasure from the quest maker, or a random treasure.
+  - the quest will need a map of roomKeys to treasure/random state
+- Each quest has a "random treasure deck" which contains all the money and items that may be earned. This treasure deck also contains wandering monsters and traps. This deck is generated based on the difficulty score of the quest.
+
+## To install
 
 first, [install meteor](https://www.meteor.com/install)
 

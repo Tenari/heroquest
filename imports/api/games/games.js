@@ -1,7 +1,7 @@
 // Definition of the games collection
 
 import { Mongo } from 'meteor/mongo';
-import { xyKey } from '/imports/configs/general.js';
+import { locationFromKey, xyKey } from '/imports/configs/general.js';
 
 export const Games = new Mongo.Collection('games');
 
@@ -15,10 +15,7 @@ Games.helpers({
       }
       return false
     })
-    return {
-      x: parseInt(matchKey.split('-')[0]),
-      y: parseInt(matchKey.split('-')[1]),
-    }
+    return locationFromKey(matchKey);
   },
   moveCharacterOnMap(oldLoc, newLoc) {
     const oldKey = xyKey(oldLoc.x, oldLoc.y);
@@ -27,5 +24,16 @@ Games.helpers({
     delete this.map[oldKey].character;
     this.map[newKey].character = character;
     return this.map;
-  }
+  },
+  endTurn(Characters){
+    let nextTurn = this.characterIds.indexOf(this.currentTurn) + 1;
+    if (nextTurn >= this.characterIds.length) {
+      // TODO: monsters take a turn
+      nextTurn = 0;
+    }
+    Games.update(this._id, {$set: {
+      currentTurn: this.characterIds[nextTurn],
+      turn: Characters.findOne(this.characterIds[nextTurn]).freshTurn(),
+    }});
+  },
 })

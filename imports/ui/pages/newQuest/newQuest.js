@@ -2,7 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Quests } from '/imports/api/quests/quests.js';
-import { drawMap, xyKey } from '/imports/configs/general.js';
+import { computeRemainingRandomTreasurePool, spacesInRoom, computeDifficulty, computeTreasure, detectRooms, drawMap, xyKey } from '/imports/configs/general.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
 import './newQuest.html';
 
@@ -10,6 +10,7 @@ Template.newQuest.onCreated(function(){
   this.name = new ReactiveVar(null);
   this.width = new ReactiveVar(26);
   this.height = new ReactiveVar(20);
+  this.rooms = new ReactiveVar({"0-0":{treasure: 'random'}});
 
   // format => {"x-y": {rightWall: true, bottomWall: true, spawn: true, rubble: true, rightDoor: true, bottomDoor: true}}
   this.map = new ReactiveVar({});
@@ -28,6 +29,7 @@ Template.newQuest.onCreated(function(){
         this.width.set(quest.width);
         this.height.set(quest.height);
         this.map.set(quest.map);
+        this.rooms.set(quest.rooms);
         $('textarea.description').val(quest.desc);
       }
     })
@@ -51,6 +53,7 @@ Template.newQuest.onCreated(function(){
     'rm door': 'removing door (click border)',
     'add secretdoor': 'adding secret door (click border)',
     'rm secretdoor': 'removing secret door (click border)',
+    'rm treasure': 'removing treasure (click tile in room)',
   };
   let that = this;
   _.each(MONSTERS, function(obj, key) {
@@ -96,6 +99,24 @@ Template.newQuest.helpers({
     const instance = Template.instance();
     const loc = instance && instance.currentHoverLocation.get();
     return loc && ("("+loc.x+","+loc.y+")");
+  },
+  difficulty() {
+    const instance = Template.instance();
+    const map = instance.map.get();
+    return map && computeDifficulty({map}, MONSTERS);
+  },
+  totalTreasure(){
+    const instance = Template.instance();
+    const map = instance.map.get();
+    if (!map) return 0;
+    const diff = computeDifficulty({map}, MONSTERS);
+    return computeTreasure(diff);
+  },
+  treasureLeft() {
+    const instance = Template.instance();
+    const map = instance.map.get();
+    if (!map) return 0;
+    return computeRemainingRandomTreasurePool(map, instance.rooms.get(), MONSTERS);
   }
 })
 
@@ -104,10 +125,12 @@ Template.newQuest.events({
     instance.name.set(e.currentTarget.value);
   },
   'change input.width'(e, instance) {
-    instance.width.set(parseInt(e.currentTarget.value));
+    if (e.currentTarget.value > 0)
+      instance.width.set(parseInt(e.currentTarget.value));
   },
   'change input.height'(e, instance) {
-    instance.height.set(parseInt(e.currentTarget.value));
+    if (e.currentTarget.value > 0)
+      instance.height.set(parseInt(e.currentTarget.value));
   },
   'keyup input.cmd'(e, instance) {
     if (e.keyCode == 13) { // Enter
@@ -123,6 +146,13 @@ Template.newQuest.events({
         instance.mode.set(command);
       }
       $(e.currentTarget).val('');
+
+      // update the rooms map
+      let rooms = {};
+      detectRooms(instance.map.curValue, instance.width.curValue, instance.height.curValue).forEach(function(key){
+        rooms[key] = instance.rooms.curValue[key] || {treasure: 'random'};
+      })
+      instance.rooms.set(rooms);
     } else if (e.keyCode == 38) { // ArrowUp
       const index = instance.commandHistory.curValue.length - instance.commandHistoryLocation.curValue;
       if(index < 0) return null;
@@ -137,6 +167,7 @@ Template.newQuest.events({
   },
   'mouseenter/click .map-border'(e, instance) {
     const mode = instance.mode.get();
+    if (!mode) return false;
     const add = mode.split(' ')[0] == 'add';
     const detail = mode.split(' ')[1];
 
@@ -155,6 +186,7 @@ Template.newQuest.events({
   },
   'click .map-tile'(e, instance) {
     const mode = instance.mode.get();
+    if (!mode) return false;
     const add = mode.split(' ')[0] == 'add';
     const detail = mode.split(' ')[1];
 
@@ -163,6 +195,11 @@ Template.newQuest.events({
     }
     if (detail == 'monster') {
       setMapAttribute(e, instance, detail, add && mode.split(' ')[2]);
+    }
+    if (mode.split(' ')[0] == 'set'){
+      if (detail == 'treasure') {
+        setRoomAttribute(e, instance, detail, parseInt(mode.split(' ')[2]));
+      }
     }
   },
   'mouseenter .map-tile'(e, instance) {
@@ -179,6 +216,7 @@ Template.newQuest.events({
         width: instance.width.get(),
         map: instance.map.get(),
         desc: $('textarea.description').val(),
+        rooms: instance.rooms.get(),
       }, function(error, result) {
         console.log(error);
       });
@@ -188,6 +226,7 @@ Template.newQuest.events({
         width: instance.width.get(),
         map: instance.map.get(),
         desc: $('textarea.description').val(),
+        rooms: instance.rooms.get(),
       }, function(error, result) {
         FlowRouter.setQueryParams({qId: result});
       });
@@ -195,12 +234,12 @@ Template.newQuest.events({
   },
   'click button.publish'(e, instance) {
     let qId = FlowRouter.getQueryParam('qId');
-      Meteor.call('quests.publish', qId, function(error, result) {
-        console.log(error, result);
-        if (result && !error) {
-          FlowRouter.go('/');
-        }
-      })
+    Meteor.call('quests.publish', qId, function(error, result) {
+      console.log(error, result);
+      if (result && !error) {
+        FlowRouter.go('/');
+      }
+    })
   }
 })
 
@@ -214,3 +253,19 @@ function setMapAttribute(e, instance, attribute, value) {
   instance.map.set(map);
 }
 
+function setRoomAttribute(e, instance, attribute, value) {
+  const x = $(e.currentTarget).attr('data-x');
+  const y = $(e.currentTarget).attr('data-y');
+  const key = xyKey(x, y);
+  const map = instance.map.get();
+  const width = instance.width.get();
+  const height = instance.height.get();
+  let rooms = instance.rooms.get();
+  _.each(rooms, function(room, roomKey) {
+    if(spacesInRoom(roomKey, map, width, height)[key]) {
+      console.log(attribute, value);
+      room[attribute] = value;
+    }
+  })
+  instance.rooms.set(rooms);
+}

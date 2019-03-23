@@ -36,6 +36,7 @@ Meteor.methods({
       height: details.height,
       width: details.width,
       map: cleanMapObj(details.map),
+      rooms: details.rooms,
       desc: details.desc,
       createdAt: new Date(),
     });
@@ -50,6 +51,7 @@ Meteor.methods({
         width: details.width,
         map: cleanMapObj(details.map),
         desc: details.desc,
+        rooms: details.rooms,
       }
     });
   },

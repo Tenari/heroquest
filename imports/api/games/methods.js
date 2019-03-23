@@ -5,7 +5,8 @@ import { check } from 'meteor/check';
 import { Games } from './games.js';
 import { Characters } from '/imports/api/characters/characters.js';
 import { Quests } from '/imports/api/quests/quests.js';
-import { xyKey, makeTilesVisible } from '/imports/configs/general.js';
+import { computeRemainingRandomTreasurePool, xyKey, makeTilesVisible } from '/imports/configs/general.js';
+import { MONSTERS } from '/imports/configs/monsters.js';
 
 Meteor.methods({
   'games.insert'(qId, party) {
@@ -34,7 +35,10 @@ Meteor.methods({
       map: map,
       height: quest.height,
       width: quest.width,
+      rooms: quest.rooms,
+      randomTreasurePool: computeRemainingRandomTreasurePool(quest.map, quest.rooms, MONSTERS),
       start: new Date(),
+      rewards: {},
     })
     _.each(party, function(cId, index){
       Characters.update(cId, {$set: {
@@ -48,16 +52,7 @@ Meteor.methods({
     if (!game) throw 'invalid game id';
     const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
     if(!character || character._id != game.currentTurn) throw 'fuck off';
-
-    let nextTurn = game.characterIds.indexOf(game.currentTurn) + 1;
-    if (nextTurn >= game.characterIds.length) {
-      // TODO: monsters take a turn
-      nextTurn = 0;
-    }
-    Games.update(gId, {$set: {
-      currentTurn: game.characterIds[nextTurn],
-      turn: Characters.findOne(game.characterIds[nextTurn]).freshTurn(),
-    }});
+    game.endTurn(Characters);
   },
 });
 

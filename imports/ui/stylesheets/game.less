@@ -7,6 +7,14 @@
   margin-left: auto;
   margin-right: auto;
   overflow:hidden;
+  &.selecting-target {
+    .map-tile:hover {
+      height: 57px;
+      width: 57px;
+      min-width: 57px;
+      border: 2px solid red;
+    }
+  }
   .map-tile {
     position: relative;
     &.not-visible {
@@ -46,6 +54,11 @@
         width: 16px;
         left: -6px;
       }
+      .right-secret-door {
+        background-size: cover;
+        width: 30px;
+        left: -13px;
+      }
       .right-door.open-door {
         left: -55px;
         top: 0;
@@ -60,6 +73,23 @@
       height: 3px;
       width: 64px;
       min-width: 64px;
+      .bottom-door {
+        background-size: cover;
+        height: 16px;
+        top: -6px;
+      }
+      .bottom-secret-door {
+        background-size: cover;
+        height: 30px;
+        top: -13px;
+      }
+      .bottom-door.open-door {
+        top: -55px;
+        transform: rotate(90deg);
+        height: 64px;
+        z-index: 1;
+        background-image: url(right-door-open.png);
+      }
     }
   }
 }
