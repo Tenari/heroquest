@@ -5,7 +5,8 @@ import { Quests } from '/imports/api/quests/quests.js';
 import { Characters } from '/imports/api/characters/characters.js';
 import { Games } from '/imports/api/games/games.js';
 import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
-import { drawPlayerViewOfMap, ACTIONS } from '/imports/configs/general.js';
+import { drawPlayerViewOfMap} from '/imports/configs/general.js';
+import { ACTIONS } from '/imports/configs/actions.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
 import './game.html';
 
@@ -51,7 +52,7 @@ Template.Game_play.helpers({
     const game = Games.findOne(gId);
     const characterLocation = game && game.characterLocation(character._id);
 
-    return game && character && drawPlayerViewOfMap(game.map, game.width, game.height, {height: 8, width: 14}, characterLocation);
+    return game && character && drawPlayerViewOfMap(game.map, game.width, game.height, {height: 8, width: 14}, characterLocation, game.monsters);
   },
   myTurn(){
     const gId = FlowRouter.getParam('gId');
@@ -71,6 +72,11 @@ Template.Game_play.helpers({
     return _.select(ACTIONS, function(action, key){
       return action.test(game, character);
     });
+  },
+  character() {
+    const gId = FlowRouter.getParam('gId');
+    const game = Games.findOne(gId);
+    return Characters.findOne({userId: Meteor.userId(), inGame: gId});
   }
 })
 

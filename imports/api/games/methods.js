@@ -4,6 +4,7 @@ import { Meteor } from 'meteor/meteor';
 import { check } from 'meteor/check';
 import { Games } from './games.js';
 import { Characters } from '/imports/api/characters/characters.js';
+import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
 import { Quests } from '/imports/api/quests/quests.js';
 import { computeRemainingRandomTreasurePool, xyKey, makeTilesVisible } from '/imports/configs/general.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
@@ -23,12 +24,24 @@ Meteor.methods({
         spawns.push(key);
       }
     })
+    const treasurePool = computeRemainingRandomTreasurePool(quest.map, quest.rooms, MONSTERS); // this has to be called b4 the monsters are translated from keys to indexes + objects
 
     let map = makeTilesVisible(quest.map, quest.height, quest.width, spawns);
     map = spawnCharacters(map, characters, spawns);
 
+    // create objects to track monsters state individually
+    let monsters = [];
+    _.each(map, function(tile, key){
+      if (tile.monster) {
+        const index = monsters.length;
+        monsters.push(MONSTERS[tile.monster]);
+        tile.monster = index;
+      }
+    })
+
     gId = Games.insert({
       questId: qId,
+      start: new Date(),
       characterIds: party,
       currentTurn: party[0],
       turn: _.find(characters, function(c){return c._id == party[0]}).freshTurn(),
@@ -36,9 +49,9 @@ Meteor.methods({
       height: quest.height,
       width: quest.width,
       rooms: quest.rooms,
-      randomTreasurePool: computeRemainingRandomTreasurePool(quest.map, quest.rooms, MONSTERS),
-      start: new Date(),
+      randomTreasurePool: treasurePool,
       rewards: {},
+      monsters: monsters,
     })
     _.each(party, function(cId, index){
       Characters.update(cId, {$set: {
@@ -52,7 +65,7 @@ Meteor.methods({
     if (!game) throw 'invalid game id';
     const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
     if(!character || character._id != game.currentTurn) throw 'fuck off';
-    game.endTurn(Characters);
+    game.endTurn(Characters, EventNotices);
   },
 });
 

@@ -6,7 +6,8 @@ import { Games } from '/imports/api/games/games.js';
 import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
 import { CARICATURES } from '/imports/configs/caricatures.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
-import { makeTilesVisible, adjacentLocations, adjacentBoundaryLocations, xyKey, ACTIONS } from '/imports/configs/general.js';
+import { makeTilesVisible, adjacentLocations, adjacentBoundaryLocations, xyKey } from '/imports/configs/general.js';
+import { ACTIONS } from '/imports/configs/actions.js';
 
 Meteor.methods({
   'characters.insert'(name, key) {
@@ -73,7 +74,7 @@ Meteor.methods({
     // if new newLoc is invalid for any number of other reasons, return false;
     if (newLoc.x < 0 ||newLoc.y < 0 ||
         newLoc.x >= game.width || newLoc.y >= game.height)  return false; // cant walk out of the boundaries
-    if (newTile && newTile.monster) return false; // cant walk through monsters
+    if (newTile && _.isNumber(newTile.monster)) return false; // cant walk through monsters
 
     // if the user is stepping on the exit, this is different
     if (newTile && newTile.exit) {
@@ -116,7 +117,7 @@ function exitGame(game, character, collections) {
     gp: character.gp + (game.rewards.gp || 0),
   }, $push: {completedGames: game._id}});
 
-  game.endTurn(collections.Characters);
+  game.endTurn(collections.Characters, collections.EventNotices);
   const charLoc = game.characterLocation(character._id); 
   game.map[charLoc.key].character = null; //remove the character from the map
   collections.Games.update(game._id, {$set: {map: game.map}, $pull: {characterIds: character._id}});

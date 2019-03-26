@@ -1,4 +1,11 @@
 <template name="character_sheet">
+  <div>
+    {{#if character.inGame}}
+      <a href="/game/{{character.inGame}}">back to Game</a>
+    {{else}}
+      <a href="/">back to home</a>
+    {{/if}}
+  </div>
   <div class="character-sheet">
     <div class="name">{{character.name}}</div>
     <div class="caricature">{{character.caricatureName}}</div>

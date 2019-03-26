@@ -84,7 +84,7 @@ export function drawMap(map, width, height) {
   return result;
 };
 
-export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
+export function drawPlayerViewOfMap(map, width, height, viewport, charLoc, monsters) {
   let html = "";
   const viewH = viewport.height;
   const viewW = viewport.width;
@@ -103,7 +103,7 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
     s_y = 0;
   }
   // Too close to bottom
-  else if (charLoc.y > (height - (viewH - drawY))) { // rows visible below.
+  else if (charLoc.y > (height - (viewH - drawY-1))) { // rows visible below.
     drawY = viewH - (height - charLoc.y);
     s_y = charLoc.y - drawY;
   }
@@ -144,8 +144,8 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc) {
           exit: visible && tile.exit,
           'not-visible': !visible,
         };
-        if (visible && tile.monster) {
-          classObj[tile.monster] = true;
+        if (visible && _.isNumber(tile.monster)) {
+          classObj[monsters[tile.monster].key] = true;
         }
         let classes = classNames(classObj);
 
@@ -239,7 +239,7 @@ function checkCardinalDirections(map, height, width, x, y, alreadyChecked) {
     const checkKey = xyKey(details.checkX, details.checkY);
     const key = xyKey(details.newX, details.newY);
     if (!map[key]) map[key] = {};
-    map[key].visible = map[key].visible || isTileVisible(map[checkKey], details.direction);
+    map[key].visible = map[key].visible || borderLocationIsClear(map[checkKey], details.direction);
     if (map[key].visible && details.newY < height && details.newY >= 0 && details.newX < width && details.newX >= 0) {
       map = checkCardinalDirections(map, height, width, details.newX, details.newY, alreadyChecked);
     }
@@ -248,20 +248,21 @@ function checkCardinalDirections(map, height, width, x, y, alreadyChecked) {
   return map;
 }
 
-function isTileVisible(tile, direction) {
-  let visible = true;
+//returns true if the given borderLocation is NOT blocking normal travel/sight
+function borderLocationIsClear(tile, direction) {
+  let clear = true;
   if (tile) {
     if (tile[direction+'Door'] && !tile[direction+'DoorOpen']) { // closed door
-      visible = false;
+      clear = false;
     }
     if (tile[direction+'SecretDoor'] && !tile[direction+'SecretDoorOpen']){ // closed secretdoor
-      visible = false;
+      clear = false;
     }
     if (tile[direction+'Wall'] && !tile[direction+'Door'] && !tile[direction+'SecretDoor']){ // wall without a door or secretdppr
-      visible = false;
+      clear = false;
     }
   }
-  return visible;
+  return clear;
 }
 
 // returns a map of location objects that are adjacent to the passed in location or locationKey
@@ -300,145 +301,6 @@ export function adjacentBoundaryLocations(loc){
   };
 }
 
-export const ACTIONS = {
-  attack: {
-    key: 'attack',
-    label: 'Attack',
-    selectsTarget: true,
-    test: function(game, character) {
-      // return true if you are adjacent to a monster
-      const charLoc = game.characterLocation(character._id);
-      return !game.turn.hasActed && _.find(_.values(adjacentLocations(charLoc)), function(loc){
-        return game.map[loc.key] && game.map[loc.key].monster;
-      });
-    },
-    perform: function(game, character, params, collections) {
-      const charLoc = game.characterLocation(character._id);
-      const key = xyKey(params.x, params.y);
-      const adjacent = adjacentLocations(charLoc);
-
-      // only do the attack if the params they sent were valid
-      if (!_.find(_.values(adjacent), function(loc){return loc.key == key})) return false;
-      // and there's a monster there
-      if (!game.map[key] || !game.map[key].monster) return false;
-
-      const monster = collections.MONSTERS[game.map[key].monster];
-      game.turn.hasActed = true;
-      
-      // roll attacks
-      let dmg = 0;
-      _.times(character.attack, function(){
-        if (rollPercent(character.accuracy)) { // you hit!
-          dmg += 1;
-        }
-      })
-      // roll defenses
-      _.times(monster.defense, function(){
-        if (rollPercent(monster.deflection)) { // you hit!
-          dmg -= 1;
-        }
-      })
-
-      if (dmg <= 0) {
-        collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You missed the '+monster.name});
-        return collections.Games.update(game._id, {$set: {turn: game.turn}});
-      }
-
-      // update stats
-      collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You killed the '+monster.name});
-      game.map[key].monster = null;
-      collections.Games.update(game._id, {$set: {map: game.map, turn: game.turn}});
-    },
-  },
-  spell: {
-    key: 'spell',
-    label: 'Cast Spell',
-    test: function(game, character) {
-      // return true if you have spells remaining
-      return false;
-    },
-  },
-  treasure: {
-    key: 'treasure',
-    label: 'Search for treasure',
-    test(game, character) {
-      let canSearch = true;
-      const charLoc = game.characterLocation(character._id);
-      _.each(game.rooms, function(room, roomKey) {
-        if (spacesInRoom(roomKey, game.map, game.width, game.height)[charLoc.key]) { // if the room we are looking at houses the character
-          if (room.treasureSearched) {
-            canSearch = false;
-          }
-        }
-      })
-      return canSearch;
-    },
-    perform(game, character, params, collections){
-      const charLoc = game.characterLocation(character._id);
-      _.each(game.rooms, function(room, roomKey) {
-        if (spacesInRoom(roomKey, game.map, game.width, game.height)[charLoc.key]) { // if the room we are looking at houses the character
-          console.log('searching for treausre', room, roomKey);
-          if (room.treasure == 'random') {
-            var luck = Math.random();
-            // 20% chance of monster
-            // 14% chance of trap
-            // 66% chance of gold or item
-            if (luck < 0.2) {
-              // TODO wandering monster
-              collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'TODO: You found a wandering monster!'});
-            } else if (luck < 0.34) {
-              // TODO trap
-              collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'TODO: You found a trap!'});
-            } else { // money!
-              let amount = parseInt(game.randomTreasurePool / _.select(_.values(game.rooms), function(room){return room.treasure == 'random'}).length);
-              luck = Math.random();
-              if (luck < 0.33) {
-                amount = parseInt(amount *2);
-              } else if (luck < 0.66) {
-                amount = parseInt(amount / 2);
-              }
-              collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You found '+amount+' copper pieces!'});
-              character.cp += amount;
-            }
-          } else {
-            collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You found '+room.treasure+' copper pieces!'});
-            character.cp += room.treasure;
-          }
-          room.treasureSearched = true;
-        }
-      })
-      collections.Characters.update(character._id, {$set: {cp: character.cp}});
-      game.turn.hasActed = true;
-      return collections.Games.update(game._id, {$set: {rooms: game.rooms, turn: game.turn}});
-    },
-  },
-  secrets: {
-    key: 'secrets',
-    label: 'Search for doors/traps',
-    test(game, character) {
-      return true;
-    },
-    perform(game, character, params, collections) {
-      const charLoc = game.characterLocation(character._id);
-      let foundSomething = false;
-      _.each(bordersOfRoom(charLoc, game), function(borderLoc){
-        let tile = game.map[borderLoc.key];
-        if (tile && tile[borderLoc.direction+'SecretDoor'] && !tile[borderLoc.direction+'SecretDoorOpen']) {
-          collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You found a secret door!'});
-          foundSomething = true;
-          game.map[borderLoc.key][borderLoc.direction+'SecretDoorOpen'] = true;
-        }
-      })
-      if (!foundSomething) {
-        collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You searched the area, but failed to find anything.'});
-      }
-      game.turn.hasActed = true;
-      game.map = makeTilesVisible(game.map, game.height, game.width, [xyKey(charLoc.x, charLoc.y)]);
-      collections.Games.update(game._id, {$set: {map: game.map, turn: game.turn}});
-    },
-  },
-}
-
 // returns a list of locationKeys which identify the unique rooms in the map. Will always at least return ["0-0"]
 export function detectRooms(map, width, height) {
   let rooms = {}; // roomkey => borderstring
@@ -470,7 +332,7 @@ export function spacesInRoom(key, map, width, height){
 
 // returns a map of {borderKey: borderLocations} which makeup the walls+doors that define a room
 // let borders = {}, checked = {};
-function bordersOfRoom(roomKey, game, borders, checked, alsoReturnChecked) {
+export function bordersOfRoom(roomKey, game, borders, checked, alsoReturnChecked) {
   if (!borders) borders = {};
   if (!checked) checked = {spaces:{}};
   checked.spaces[roomKey] = true;
@@ -498,6 +360,120 @@ function bordersOfRoom(roomKey, game, borders, checked, alsoReturnChecked) {
   return borders;
 }
 
-function rollPercent(prevalence) {
+export function rollPercent(prevalence) {
   return Math.random() < prevalence;
+}
+
+export function aStar(startLocation, endLocation, game) {
+  let first = _.clone(startLocation);
+  first.priority = 0;
+  let open = [first];
+  let costSoFar = {};
+  costSoFar[startLocation.key] = 0;
+
+  while (open[0] && open[0].key != endLocation.key) {
+    open = _.sortBy(open, function(loc) {return loc.priority;});
+    let current = open[0];
+    if (current.key == endLocation.key)
+      break;
+    open = _.rest(open); // the list without the first one
+
+    let validNextMoveDirections = [];
+    _.each(adjacentBoundaryLocations(current), function(checkLocation, cardinalDirection){
+      let tile = game.map[checkLocation.key]
+      if (tile) { // the location has associated data
+        if (borderLocationIsClear(tile, checkLocation.direction)) {
+          validNextMoveDirections.push(cardinalDirection);
+        }
+      } else {
+        validNextMoveDirections.push(cardinalDirection);
+      }
+    })
+    let nextLocations = adjacentLocations(current);
+    _.each(validNextMoveDirections, function(cardinalDirection){
+      let next = nextLocations[cardinalDirection];
+      let tile = game.map[next.key];
+      let stillValid = true;
+
+      // TODO: route around traps with another if condition making them NOT stillValid
+      if (next.x < 0 || next.y < 0 || next.x >= game.width || next.y >= game.height) { // out of bounds, not stillValid
+        stillValid = false;
+      }
+
+      if (stillValid) {
+        let newCost = costSoFar[current.key] + 1;
+        if (!costSoFar[next.key] || newCost < costSoFar[next.key]) {
+          costSoFar[next.key] = newCost;
+          next.priority = newCost + manhattanDistance(next, endLocation);
+          next.previous = current;
+          open.push(next);
+        }
+      }
+    })
+  }
+  // return first if open[0] is falsy because that means we could not find a path
+  return {finalNode: open[0] || first, costs: costSoFar};
+}
+
+export function manhattanDistance(startLocation, goalLocation) {
+  const dx = Math.abs(startLocation.x - goalLocation.x);
+  const dy = Math.abs(startLocation.y - goalLocation.y);
+  return dx + dy;
+}
+
+export function moveAdjacentToLocationAndAttack(start, end, game, monster, character, move, collections) {
+  if (move <= 0) return false;
+  if (_.contains(_.pluck(adjacentLocations(end), 'key'), start.key)) { //adjacent to opponent
+    attackCharacter(character, monster, game, collections);
+    return false;
+  }
+
+  let aStarResults = aStar(start, end, game);
+  let last = aStarResults.finalNode;
+  while (last && last.previous && last.previous.previous) {
+    last = last.previous;
+  }
+  Meteor.setTimeout(function(){
+    collections.Games.update(game._id, {$set: {map: game.moveMonsterOnMap(start, last)}}, function(){
+      if (_.contains(_.pluck(adjacentLocations(end), 'key'), last.key)) {
+        attackCharacter(character, monster, game, collections);
+      } else {
+        moveAdjacentToLocationAndAttack({x:last.x, y:last.y, key: last.key}, end, collections.Games.findOne(game._id), monster, character, move-1, collections);
+      }
+    })
+  }, 100);
+}
+
+export function attackCharacter(character, monster, game, collections) {
+  let result = basicAttack(monster, character);
+  if (result.dmg > 0) {
+    character.body -= result.dmg;
+    collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'The '+monster.name+' attacked and did '+result.dmg+' damage.'});
+    collections.Characters.update(character._id, {$set: {body: character.body}})
+  } else {
+    collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'The '+monster.name+' attacked, but missed.'});
+  }
+}
+
+export function basicAttack(attacker, defender) {
+  var result = {
+    hits: 0,
+    blocks: 0,
+    dmg: 0,
+  };
+  // roll attacks
+  _.times(attacker.attack, function(){
+    if (rollPercent(attacker.accuracy)) { // you hit!
+      result.hits += 1;
+    }
+  })
+  // roll defenses
+  _.times(defender.defense, function(){
+    if (rollPercent(defender.deflection)) { // you hit!
+      result.blocks += 1;
+    }
+  })
+  result.dmg = result.hits - result.blocks;
+
+  return result;
 }
