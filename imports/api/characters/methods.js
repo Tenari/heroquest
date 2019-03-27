@@ -6,6 +6,7 @@ import { Games } from '/imports/api/games/games.js';
 import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
 import { CARICATURES } from '/imports/configs/caricatures.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
+import { TRAPS } from '/imports/configs/traps.js';
 import { makeTilesVisible, adjacentLocations, adjacentBoundaryLocations, xyKey } from '/imports/configs/general.js';
 import { ACTIONS } from '/imports/configs/actions.js';
 
@@ -44,7 +45,8 @@ Meteor.methods({
     });
   },
   'characters.move'(gId, direction) {
-    const game = Games.findOne(gId);
+    // TODO prevent multiple moves within 200 ms
+    let game = Games.findOne(gId);
     if (!game) throw 'invalid game id';
     const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
     if (!character) throw 'no character to move exists, brah';
@@ -83,7 +85,13 @@ Meteor.methods({
 
     let turn = game.turn;
     turn.moves -= 1;
-    Games.update(gId, {$set: {map: game.moveCharacterOnMap(oldLoc, newLoc), turn: turn}});
+    Games.update(gId, {$set: {map: game.moveCharacterOnMap(oldLoc, newLoc), turn: turn}}, function(){
+      // user is stepping on a trap! like a noob.
+      if (newTile && newTile.trap) {
+        return TRAPS[newTile.trap].trigger(newLoc, Games.findOne(gId), character, {Games, Characters, EventNotices});
+      }
+    });
+
   },
   'characters.action'(gId, actionKey, params) {
     const game = Games.findOne(gId);
@@ -124,3 +132,4 @@ function exitGame(game, character, collections) {
 
   collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You have exited the dungeon!', redirect: '/'});
 }
+

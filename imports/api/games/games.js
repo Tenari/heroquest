@@ -37,7 +37,7 @@ Games.helpers({
     let game = this;
     let nextTurn = this.characterIds.indexOf(this.currentTurn) + 1;
     if (nextTurn >= this.characterIds.length) {
-      nextTurn = 0;
+      let stillMonsterTurn = false;
       _.each(this.monsters, function(monster, index){
         if (!monster) return false;
 
@@ -48,6 +48,7 @@ Games.helpers({
         if (!myTile.visible) { // if this monster hasn't been discovered yet
           return false;
         }
+        stillMonsterTurn = true;
 
         // find the nearest character
         let characterLocations = _.map(
@@ -58,13 +59,40 @@ Games.helpers({
           }
         );
         let target = _.sortBy(characterLocations, function(charLoc){ return manhattanDistance(myLoc, charLoc);})[0];
-        moveAdjacentToLocationAndAttack(myLoc, target, game, monster, Characters.findOne(game.map[target.key].character._id), monster.move, {Games, Characters, EventNotices});
+        moveAdjacentToLocationAndAttack(
+          myLoc,
+          target,
+          game,
+          monster,
+          Characters.findOne(game.map[target.key].character._id),
+          monster.move,
+          {Games, Characters, EventNotices},
+          function() {
+            console.log('cb()');
+            if (index == game.monsters.length -1){
+              console.log('updating turn');
+              Games.update(game._id, {$set: {
+                currentTurn: game.characterIds[0],
+                turn: Characters.findOne(game.characterIds[0]).freshTurn(),
+              }});
+            }
+          }
+        );
 
       })
+      if (stillMonsterTurn) {
+        Games.update(this._id, {$set: {currentTurn: 'monsters'}});
+      } else {
+        Games.update(this._id, {$set: {
+          currentTurn: this.characterIds[0],
+          turn: Characters.findOne(this.characterIds[0]).freshTurn(),
+        }});
+      }
+    } else {
+      Games.update(this._id, {$set: {
+        currentTurn: this.characterIds[nextTurn],
+        turn: Characters.findOne(this.characterIds[nextTurn]).freshTurn(),
+      }});
     }
-    Games.update(this._id, {$set: {
-      currentTurn: this.characterIds[nextTurn],
-      turn: Characters.findOne(this.characterIds[nextTurn]).freshTurn(),
-    }});
   },
 })

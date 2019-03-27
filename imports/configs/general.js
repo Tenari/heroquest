@@ -51,6 +51,9 @@ export function drawMap(map, width, height) {
         if (map[key] && map[key].monster) {
           classObj[map[key].monster] = true;
         }
+        if (map[key] && map[key].trap) {
+          classObj[map[key].trap] = true;
+        }
         let classes = classNames(classObj);
         result += '<div class="'+classes+'" data-x="'+x+'" data-y="'+y+'">';
           if (map[key] && map[key].spawn) {
@@ -147,6 +150,9 @@ export function drawPlayerViewOfMap(map, width, height, viewport, charLoc, monst
         if (visible && _.isNumber(tile.monster)) {
           classObj[monsters[tile.monster].key] = true;
         }
+        if (visible && tile.trap && tile.trapTriggered) {
+          classObj[tile.trap] = true;
+        }
         let classes = classNames(classObj);
 
         html += '<div class="'+classes+'" data-x="'+(j+s_x)+'" data-y="'+(i+s_y)+'">';
@@ -190,6 +196,9 @@ export function computeDifficulty(quest, MONSTERS) {
     if (tile.monster) {
       const monster = MONSTERS[tile.monster];
       difficulty += ((2*(monster.attack + monster.defense)) + monster.move + monster.body + monster.mind);
+    }
+    if (tile.trap) {
+      difficulty += 5;
     }
   })
   return difficulty;
@@ -421,10 +430,11 @@ export function manhattanDistance(startLocation, goalLocation) {
   return dx + dy;
 }
 
-export function moveAdjacentToLocationAndAttack(start, end, game, monster, character, move, collections) {
+export function moveAdjacentToLocationAndAttack(start, end, game, monster, character, move, collections, cb) {
   if (move <= 0) return false;
   if (_.contains(_.pluck(adjacentLocations(end), 'key'), start.key)) { //adjacent to opponent
     attackCharacter(character, monster, game, collections);
+    cb();
     return false;
   }
 
@@ -437,19 +447,19 @@ export function moveAdjacentToLocationAndAttack(start, end, game, monster, chara
     collections.Games.update(game._id, {$set: {map: game.moveMonsterOnMap(start, last)}}, function(){
       if (_.contains(_.pluck(adjacentLocations(end), 'key'), last.key)) {
         attackCharacter(character, monster, game, collections);
+        cb();
       } else {
-        moveAdjacentToLocationAndAttack({x:last.x, y:last.y, key: last.key}, end, collections.Games.findOne(game._id), monster, character, move-1, collections);
+        moveAdjacentToLocationAndAttack({x:last.x, y:last.y, key: last.key}, end, collections.Games.findOne(game._id), monster, character, move-1, collections, cb);
       }
     })
-  }, 100);
+  }, 1000);
 }
 
 export function attackCharacter(character, monster, game, collections) {
   let result = basicAttack(monster, character);
   if (result.dmg > 0) {
-    character.body -= result.dmg;
+    damageCharacter(character, result.dmg, collections.Characters);
     collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'The '+monster.name+' attacked and did '+result.dmg+' damage.'});
-    collections.Characters.update(character._id, {$set: {body: character.body}})
   } else {
     collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'The '+monster.name+' attacked, but missed.'});
   }
@@ -476,4 +486,13 @@ export function basicAttack(attacker, defender) {
   result.dmg = result.hits - result.blocks;
 
   return result;
+}
+
+export function damageCharacter(character, dmg, Characters) {
+  if (character.body - dmg <= 0) {
+    // TODO handle character dying
+  } else {
+    character.body -= dmg;
+    Characters.update(character._id, {$set: {body: character.body}})
+  }
 }

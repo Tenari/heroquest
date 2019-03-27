@@ -12,6 +12,11 @@
       {{/if}}
       {{currentHoverLocation}}
       <div>difficulty: {{difficulty}} | treasure available: {{treasureLeft}} / {{totalTreasure}}</div>
+      <ul>
+        {{#each item in ls}}
+          <li>{{item}}</li>
+        {{/each}}
+      </ul>
     </div>
     <div class="map">
       {{{mapHTML}}}

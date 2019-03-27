@@ -4,6 +4,7 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { Quests } from '/imports/api/quests/quests.js';
 import { computeRemainingRandomTreasurePool, spacesInRoom, computeDifficulty, computeTreasure, detectRooms, drawMap, xyKey } from '/imports/configs/general.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
+import { TRAPS } from '/imports/configs/traps.js';
 import './newQuest.html';
 
 Template.newQuest.onCreated(function(){
@@ -38,6 +39,7 @@ Template.newQuest.onCreated(function(){
   this.commandHistory = new ReactiveVar([]);
   this.commandHistoryLocation = new ReactiveVar(1);
   this.currentHoverLocation = new ReactiveVar(null);
+  this.ls = new ReactiveVar(null);
   this.mode = new ReactiveVar(null);
   this.MODES = {
     'add wall': "adding walls (ctrl + mouseover to add)",
@@ -54,6 +56,9 @@ Template.newQuest.onCreated(function(){
     'add secretdoor': 'adding secret door (click border)',
     'rm secretdoor': 'removing secret door (click border)',
     'rm treasure': 'removing treasure (click tile in room)',
+    'add trap pit-trap': 'adding pit trap (click tile)',
+    'add trap spear-trap': 'adding spear trap (click tile)',
+    'rm trap': 'removing trap (click tile)',
   };
   let that = this;
   _.each(MONSTERS, function(obj, key) {
@@ -63,6 +68,17 @@ Template.newQuest.onCreated(function(){
 })
 
 Template.newQuest.helpers({
+  ls(){
+    let list = [];
+    const ls = Template.instance().ls.get();
+    if (ls == 'monster' || ls == 'monsters') {
+      list = _.keys(MONSTERS);
+    }
+    if (ls == 'trap' || ls == 'traps') {
+      list = _.keys(TRAPS);
+    }
+    return list;
+  },
   name(){
     return Template.instance().name.get();
   },
@@ -193,7 +209,7 @@ Template.newQuest.events({
     if (detail == 'spawn' || detail == 'rubble' || detail == 'exit') {
       setMapAttribute(e, instance, detail, add);
     }
-    if (detail == 'monster') {
+    if (detail == 'monster' || detail == 'trap') {
       setMapAttribute(e, instance, detail, add && mode.split(' ')[2]);
     }
     if (mode.split(' ')[0] == 'set'){
