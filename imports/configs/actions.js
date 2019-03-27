@@ -33,22 +33,26 @@ export const ACTIONS = {
       // and there's a monster there
       if (!game.map[key] || !_.isNumber(game.map[key].monster)) return false;
 
-      const monster = game.monsters[game.map[key].monster];
-      // TODO track monster HP loss
+      let monster = game.monsters[game.map[key].monster];
       game.turn.hasActed = true;
       
       let dmg = basicAttack(character, monster).dmg;
 
-      if (dmg <= 0) {
+      if (dmg <= 0) { // did no damage
         collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You missed the '+monster.name});
         return collections.Games.update(game._id, {$set: {turn: game.turn}});
+      } else { // did some damage
+        monster.body -= dmg;
+        if (monster.body <= 0) { // killed it
+          collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You killed the '+monster.name});
+          game.monsters[game.map[key].monster] = undefined;
+          game.map[key].monster = null;
+        } else { // still alive
+          collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You dealt '+dmg+' damage to the '+monster.name});
+          game.monsters[game.map[key].monster] = monster;
+        }
+        collections.Games.update(game._id, {$set: {monsters: game.monsters, map: game.map, turn: game.turn}});
       }
-
-      // update stats
-      collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'You killed the '+monster.name});
-      game.monsters[game.map[key].monster] = undefined;
-      game.map[key].monster = null;
-      collections.Games.update(game._id, {$set: {monsters: game.monsters, map: game.map, turn: game.turn}});
     },
   },
   spell: {

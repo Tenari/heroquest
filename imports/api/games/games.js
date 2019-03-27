@@ -63,7 +63,6 @@ function moveMonsters(gId, index, movesLeft, collections, cb) {
   if (!_.isNumber(movesLeft)) movesLeft = monster.move;
   if (movesLeft <= 0) return moveMonsters(gId, index+1, null, collections, cb);
 
-  console.log(index);
   let myLoc = locationFromKey(_.find(_.keys(game.map), function(key){
     return game.map[key].monster == index;
   }));
@@ -88,7 +87,6 @@ function moveMonsters(gId, index, movesLeft, collections, cb) {
       moveMonsters(gId, index+1, null, collections, cb);
     });
   } else {
-    // TODO fix bug where a monster moves on top of another and thus overwrites the location of a the first monster, causing crashes since it can no longer be found on the map
     moveTowardsTarget(myLoc, target, game, collections, function(){
       Meteor.setTimeout(function(){
         moveMonsters(gId, index, movesLeft-1, collections, cb);

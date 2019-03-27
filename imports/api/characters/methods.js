@@ -45,12 +45,13 @@ Meteor.methods({
     });
   },
   'characters.move'(gId, direction) {
-    // TODO prevent multiple moves within 200 ms
     let game = Games.findOne(gId);
     if (!game) throw 'invalid game id';
+    if (new Date(game.lastMovedAt) >= (new Date() - 200)) return false; // too fast of moving. only one move per 200ms
+    if (game.turn.moves < 1) return false; // no movement left
+
     const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
     if (!character) throw 'no character to move exists, brah';
-    if (game.turn.moves < 1) return false; // no movement left
     if (game.currentTurn != character._id) return false; // not your turn
 
     const oldLoc = game.characterLocation(character._id);
@@ -85,7 +86,7 @@ Meteor.methods({
 
     let turn = game.turn;
     turn.moves -= 1;
-    Games.update(gId, {$set: {map: game.moveCharacterOnMap(oldLoc, newLoc), turn: turn}}, function(){
+    Games.update(gId, {$set: {map: game.moveCharacterOnMap(oldLoc, newLoc), turn: turn, lastMovedAt: new Date()}}, function(){
       // user is stepping on a trap! like a noob.
       if (newTile && newTile.trap) {
         return TRAPS[newTile.trap].trigger(newLoc, Games.findOne(gId), character, {Games, Characters, EventNotices});

@@ -42,6 +42,7 @@ Meteor.methods({
     gId = Games.insert({
       questId: qId,
       start: new Date(),
+      lastMovedAt: new Date(),
       characterIds: party,
       currentTurn: party[0],
       turn: _.find(characters, function(c){return c._id == party[0]}).freshTurn(),

@@ -411,7 +411,11 @@ export function aStar(startLocation, endLocation, game) {
       }
 
       if (stillValid) {
-        let newCost = costSoFar[current.key] + 1;
+        let nextCostAmount = 1;
+        if (tile && _.isNumber(tile.monster)) { // increase cost to route around monsters
+          nextCostAmount = 5;
+        }
+        let newCost = costSoFar[current.key] + nextCostAmount;
         if (!costSoFar[next.key] || newCost < costSoFar[next.key]) {
           costSoFar[next.key] = newCost;
           next.priority = newCost + manhattanDistance(next, endLocation);
@@ -437,6 +441,10 @@ export function moveTowardsTarget(start, end, game, collections, cb) {
   let next = aStarResults.finalNode;
   while (next && next.previous && next.previous.previous) {
     next = next.previous;
+  }
+  const tile = game.map[next.key];
+  if (tile && _.isNumber(tile.monster)) { // nextLocation has a monster in it, which we cant pass through
+    return cb();
   }
   collections.Games.update(game._id, {$set: {map: game.moveMonsterOnMap(start, next)}}, cb);
 }
