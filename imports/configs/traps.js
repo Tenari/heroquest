@@ -7,6 +7,7 @@ function commonToAllTraps(trapLocation, game, collections) {
   turn.hasActed = true;
   collections.Games.update(game._id, {$set: {map: game.map, turn: turn}})
 }
+
 export const TRAPS = {
   'pit-trap': {
     key: 'pit-trap',
@@ -20,7 +21,12 @@ export const TRAPS = {
     key: 'spear-trap',
     label: 'Spear trap',
     trigger: function(trapLocation, game, character, collections) {
-      commonToAllTraps(trapLocation, game, collections);
+      if (game.map[trapLocation.key].trapDefunct) {
+        // There is nothing to do, these traps only activate once
+      } else {
+        game.map[trapLocation.key].trapDefunct = true
+        commonToAllTraps(trapLocation, game, collections);
+      }
     },
   },
   'falling-block-trap': {

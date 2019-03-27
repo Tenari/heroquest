@@ -63,7 +63,7 @@ Meteor.methods({
   'games.endTurn'(gId) {
     const game = Games.findOne(gId);
     if (!game) throw 'invalid game id';
-    const character = Characters.find({userId: Meteor.userId(), inGame: game._id}).fetch()[0];
+    const character = Characters.findOne({userId: Meteor.userId(), inGame: game._id});
     if(!character || character._id != game.currentTurn) throw 'fuck off';
     game.endTurn(Characters, EventNotices);
   },

@@ -1,7 +1,7 @@
 // Definition of the games collection
 
 import { Mongo } from 'meteor/mongo';
-import { moveAdjacentToLocationAndAttack, manhattanDistance, locationFromKey, xyKey } from '/imports/configs/general.js';
+import { moveTowardsTarget, attackCharacter, adjacentLocations, manhattanDistance, locationFromKey, xyKey } from '/imports/configs/general.js';
 
 export const Games = new Mongo.Collection('games');
 
@@ -37,57 +37,14 @@ Games.helpers({
     let game = this;
     let nextTurn = this.characterIds.indexOf(this.currentTurn) + 1;
     if (nextTurn >= this.characterIds.length) {
-      let stillMonsterTurn = false;
-      _.each(this.monsters, function(monster, index){
-        if (!monster) return false;
-
-        let myLoc = locationFromKey(_.find(_.keys(game.map),function(key){
-          return game.map[key].monster == index;
-        }));
-        let myTile = game.map[myLoc.key];
-        if (!myTile.visible) { // if this monster hasn't been discovered yet
-          return false;
-        }
-        stillMonsterTurn = true;
-
-        // find the nearest character
-        let characterLocations = _.map(
-          _.select(_.keys(game.map), function(key){
-            return game.map[key].character;
-          }), function (key){
-            return locationFromKey(key);
-          }
-        );
-        let target = _.sortBy(characterLocations, function(charLoc){ return manhattanDistance(myLoc, charLoc);})[0];
-        moveAdjacentToLocationAndAttack(
-          myLoc,
-          target,
-          game,
-          monster,
-          Characters.findOne(game.map[target.key].character._id),
-          monster.move,
-          {Games, Characters, EventNotices},
-          function() {
-            console.log('cb()');
-            if (index == game.monsters.length -1){
-              console.log('updating turn');
-              Games.update(game._id, {$set: {
-                currentTurn: game.characterIds[0],
-                turn: Characters.findOne(game.characterIds[0]).freshTurn(),
-              }});
-            }
-          }
-        );
-
-      })
-      if (stillMonsterTurn) {
-        Games.update(this._id, {$set: {currentTurn: 'monsters'}});
-      } else {
-        Games.update(this._id, {$set: {
-          currentTurn: this.characterIds[0],
-          turn: Characters.findOne(this.characterIds[0]).freshTurn(),
-        }});
-      }
+      Games.update(this._id, {$set: {currentTurn: 'monsters'}}, function(){
+        moveMonsters(game._id, 0, null, {Games, Characters, EventNotices}, function(){
+          Games.update(game._id, {$set: {
+            currentTurn: game.characterIds[0],
+            turn: Characters.findOne(game.characterIds[0]).freshTurn(),
+          }});
+        });
+      });
     } else {
       Games.update(this._id, {$set: {
         currentTurn: this.characterIds[nextTurn],
@@ -96,3 +53,46 @@ Games.helpers({
     }
   },
 })
+
+function moveMonsters(gId, index, movesLeft, collections, cb) {
+  let game = collections.Games.findOne(gId);
+  const monster = game.monsters[index];
+  if (game.monsters.length <= index) return cb();
+  if (!monster) return moveMonsters(gId, index+1, null, collections, cb);
+
+  if (!_.isNumber(movesLeft)) movesLeft = monster.move;
+  if (movesLeft <= 0) return moveMonsters(gId, index+1, null, collections, cb);
+
+  console.log(index);
+  let myLoc = locationFromKey(_.find(_.keys(game.map), function(key){
+    return game.map[key].monster == index;
+  }));
+  let myTile = game.map[myLoc.key];
+  if (!myTile.visible) { // if this monster hasn't been discovered yet
+    return moveMonsters(gId, index+1, null, collections, cb);
+  }
+
+  // find the nearest character
+  let characterLocations = _.map(
+    _.select(_.keys(game.map), function(key){
+      return game.map[key].character;
+    }), function (key){
+      return locationFromKey(key);
+    }
+  );
+  let target = _.sortBy(characterLocations, function(charLoc){ return manhattanDistance(myLoc, charLoc);})[0];
+
+  if (_.contains(_.pluck(_.values(adjacentLocations(target)), 'key'), myLoc.key)) { //adjacent to opponent
+    const character = collections.Characters.findOne(game.map[target.key].character._id);
+    attackCharacter(character, monster, game, collections, function(){
+      moveMonsters(gId, index+1, null, collections, cb);
+    });
+  } else {
+    // TODO fix bug where a monster moves on top of another and thus overwrites the location of a the first monster, causing crashes since it can no longer be found on the map
+    moveTowardsTarget(myLoc, target, game, collections, function(){
+      Meteor.setTimeout(function(){
+        moveMonsters(gId, index, movesLeft-1, collections, cb);
+      }, 200);
+    });
+  }
+}

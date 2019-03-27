@@ -258,9 +258,10 @@ function checkCardinalDirections(map, height, width, x, y, alreadyChecked) {
 }
 
 //returns true if the given borderLocation is NOT blocking normal travel/sight
-function borderLocationIsClear(tile, direction) {
+export function borderLocationIsClear(tile, direction) {
   let clear = true;
   if (tile) {
+    // TODO stop composing keys and make sub-objects instead
     if (tile[direction+'Door'] && !tile[direction+'DoorOpen']) { // closed door
       clear = false;
     }
@@ -430,32 +431,17 @@ export function manhattanDistance(startLocation, goalLocation) {
   return dx + dy;
 }
 
-export function moveAdjacentToLocationAndAttack(start, end, game, monster, character, move, collections, cb) {
-  if (move <= 0) return false;
-  if (_.contains(_.pluck(adjacentLocations(end), 'key'), start.key)) { //adjacent to opponent
-    attackCharacter(character, monster, game, collections);
-    cb();
-    return false;
-  }
-
+// moves a monster 1 step closer to a given endLocation
+export function moveTowardsTarget(start, end, game, collections, cb) {
   let aStarResults = aStar(start, end, game);
-  let last = aStarResults.finalNode;
-  while (last && last.previous && last.previous.previous) {
-    last = last.previous;
+  let next = aStarResults.finalNode;
+  while (next && next.previous && next.previous.previous) {
+    next = next.previous;
   }
-  Meteor.setTimeout(function(){
-    collections.Games.update(game._id, {$set: {map: game.moveMonsterOnMap(start, last)}}, function(){
-      if (_.contains(_.pluck(adjacentLocations(end), 'key'), last.key)) {
-        attackCharacter(character, monster, game, collections);
-        cb();
-      } else {
-        moveAdjacentToLocationAndAttack({x:last.x, y:last.y, key: last.key}, end, collections.Games.findOne(game._id), monster, character, move-1, collections, cb);
-      }
-    })
-  }, 1000);
+  collections.Games.update(game._id, {$set: {map: game.moveMonsterOnMap(start, next)}}, cb);
 }
 
-export function attackCharacter(character, monster, game, collections) {
+export function attackCharacter(character, monster, game, collections, cb) {
   let result = basicAttack(monster, character);
   if (result.dmg > 0) {
     damageCharacter(character, result.dmg, collections.Characters);
@@ -463,6 +449,7 @@ export function attackCharacter(character, monster, game, collections) {
   } else {
     collections.EventNotices.insert({gameId: game._id, userId: character.userId, message: 'The '+monster.name+' attacked, but missed.'});
   }
+  cb();
 }
 
 export function basicAttack(attacker, defender) {

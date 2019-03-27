@@ -1,4 +1,4 @@
-import { adjacentLocations, basicAttack, rollPercent, spacesInRoom, bordersOfRoom, makeTilesVisible, xyKey } from './general.js';
+import { adjacentLocations, adjacentBoundaryLocations, borderLocationIsClear, basicAttack, rollPercent, spacesInRoom, bordersOfRoom, makeTilesVisible, xyKey } from './general.js';
 
 export const ACTIONS = {
   attack: {
@@ -7,19 +7,29 @@ export const ACTIONS = {
     selectsTarget: true,
     test: function(game, character) {
       // return true if you are adjacent to a monster
-      // TODO fix bug where you can attack a monster through the wall
       const charLoc = game.characterLocation(character._id);
-      return !game.turn.hasActed && _.find(_.values(adjacentLocations(charLoc)), function(loc){
-        return game.map[loc.key] && _.isNumber(game.map[loc.key].monster);
+      const borders = adjacentBoundaryLocations(charLoc);
+      return !game.turn.hasActed && _.find(adjacentLocations(charLoc), function(loc, cardinalDirection){
+        const border = borders[cardinalDirection];
+        const borderTile = game.map[border.key];
+        return game.map[loc.key] && _.isNumber(game.map[loc.key].monster) && (!borderTile || borderLocationIsClear(borderTile, border.direction));
       });
     },
     perform: function(game, character, params, collections) {
       const charLoc = game.characterLocation(character._id);
       const key = xyKey(params.x, params.y);
       const adjacent = adjacentLocations(charLoc);
+      let direction = 'north';
+      _.find(adjacent, function(loc, cardinalDirection){
+        direction = cardinalDirection;
+        return loc.key == key;
+      });
+      const border = adjacentBoundaryLocations(charLoc)[direction];
+      const borderTile = game.map[border.key];
 
       // only do the attack if the params they sent were valid
-      if (!_.find(_.values(adjacent), function(loc){return loc.key == key})) return false;
+      if (!_.find(_.values(adjacent), function(loc){return loc.key == key})) return false; // attack key is not adjacent
+      if (borderTile && !borderLocationIsClear(borderTile, border.direction)) return false; // attack key is blocked by wall
       // and there's a monster there
       if (!game.map[key] || !_.isNumber(game.map[key].monster)) return false;
 
