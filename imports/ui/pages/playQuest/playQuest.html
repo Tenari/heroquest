@@ -4,19 +4,54 @@
     <div class="gameplay-details">
       This quest takes up to {{quest.maxPlayers}} players. Your party currently has {{partyCount}} members.
     </div>
-    <div class="party-managment">
-      <div>Add your character: {{> dropdown options=characterChoices className='character-choice'}} <button class="add-me">Add</button></div>
-      <div class="party-list">
-        Party:
-        {{#each member in party}}
-          <div>{{member.name}} ({{member.caricatureName}})</div>
-        {{/each}}
+    {{#if quest}}
+      <div>
+        <button class="new-party">Make a new party</button>
+        <button class="join-party">Join a party</button>
       </div>
-    </div>
-    {{#if canStartQuest}}
-    <div>
-      <button class="start-game">Start Game</button>
-    </div>
+      {{#if mode 'new-party'}}
+        <input class="party-name" type="text" value="{{lobby.name}}"/>
+        <div class="party-managment">
+          <div>Add your character: {{> dropdown options=characterChoices className='character-choice'}} <button class="add-me">Add</button></div>
+          <div class="party-list">
+            Party:
+            {{#each member in party}}
+              <div>{{member.name}} ({{member.caricatureName}})</div>
+            {{/each}}
+          </div>
+        </div>
+        {{#if canStartQuest}}
+          <div><button class="start-game">Start Game</button></div>
+        {{/if}}
+      {{/if}}
+      {{#if mode 'join-party'}}
+        <ul class="parties">
+          Parties:
+          {{#each l in lobbies}}
+            <li data-id="{{l._id}}">name: {{l.name}} ({{l.party.length}}/{{quest.maxPlayers}})</li>
+          {{/each}}
+        </ul>
+      {{/if}}
+      {{#if mode 'party-details'}}
+        <div class="party-details">
+          <p>{{lobby.name}}</p>
+          <div class="party-managment">
+            {{#if lobby.spacesOpen}}
+              <div>
+                Add your character:
+                {{> dropdown options=characterChoices className='character-choice'}}
+                <button class="add-me">Add</button>
+              </div>
+            {{/if}}
+            <div class="party-list">
+              Party:
+              {{#each member in party}}
+                <div>{{member.name}} ({{member.caricatureName}})</div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+      {{/if}}
     {{/if}}
   </div>
 </template>

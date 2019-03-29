@@ -6,6 +6,9 @@ import '../api/games/publications.js';
 import '../api/quests/methods.js';
 import '../api/quests/publications.js';
 
+import '../api/lobbies/methods.js';
+import '../api/lobbies/publications.js';
+
 import '../api/characters/methods.js';
 import '../api/characters/publications.js';
 

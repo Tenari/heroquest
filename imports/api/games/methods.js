@@ -6,16 +6,22 @@ import { Games } from './games.js';
 import { Characters } from '/imports/api/characters/characters.js';
 import { EventNotices } from '/imports/api/eventNotices/eventNotices.js';
 import { Quests } from '/imports/api/quests/quests.js';
+import { Lobbies } from '/imports/api/lobbies/lobbies.js';
 import { computeRemainingRandomTreasurePool, xyKey, makeTilesVisible } from '/imports/configs/general.js';
 import { MONSTERS } from '/imports/configs/monsters.js';
 
 Meteor.methods({
-  'games.insert'(qId, party) {
+  'games.insert'(qId, lId) {
     const quest = Quests.findOne(qId);
     if (!quest) throw 'wtf';
+
+    const lobby = Lobbies.findOne(lId);
+    const uid = Meteor.userId();
+    if (!lobby || lobby.creatorId != uid) throw 'go away';
+
+    const party = lobby.party;
     _.each(party, function(id){check(id, String);});
     const characters = Characters.find({_id: {$in: party}}).fetch();
-    const uid = Meteor.userId();
     if (!_.find(characters, function(character){ return character.userId == uid;})) throw 'wtf'; // one of the party has to belong to the noob who sent this request
 
     let spawns = [];
@@ -39,7 +45,7 @@ Meteor.methods({
       }
     })
 
-    gId = Games.insert({
+    const gId = Games.insert({
       questId: qId,
       start: new Date(),
       lastMovedAt: new Date(),
@@ -53,12 +59,14 @@ Meteor.methods({
       randomTreasurePool: treasurePool,
       rewards: {},
       monsters: monsters,
+      originatingLobbyId: lId,
     })
     _.each(party, function(cId, index){
       Characters.update(cId, {$set: {
         inGame: gId,
       }});
     })
+    Lobbies.remove(lId);
     return gId;
   },
   'games.endTurn'(gId) {

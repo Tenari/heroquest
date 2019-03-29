@@ -8,6 +8,7 @@ import './landing.html';
 Template.App_home.onCreated(function () {
   this.subscribe('myCharacters');
   this.subscribe('myQuests');
+  this.subscribe('quests');
 });
 
 Template.App_home.helpers({
