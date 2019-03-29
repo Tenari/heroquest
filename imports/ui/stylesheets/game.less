@@ -34,6 +34,8 @@
         z-index: 2;
         &.barbarian {
           background-image: url(img/barbarian.png);
+          height: 150%;
+          top: -50%;
         }
         &.dwarf {
           background-image: url(img/dwarf.png);
@@ -49,6 +51,13 @@
     .map-border {
       width: 3px;
       min-width: 3px;
+      &.wall {
+        background-image: url(wall.png);
+        background-size: cover;
+        min-width: 12px;
+        margin-right: -5px;
+        margin-left: -4px;
+      }
       .right-door {
         background-size: cover;
         width: 16px;
