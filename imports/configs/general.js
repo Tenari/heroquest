@@ -484,10 +484,10 @@ export function basicAttack(attacker, defender) {
 }
 
 export function damageCharacter(character, dmg, Characters) {
-  if (character.body - dmg <= 0) {
-    // TODO handle character dying
+  character.body -= dmg;
+  if (character.body <= 0) {
+    Characters.update(character._id, {$set: {body: character.body, dead: true, inGame: false}})
   } else {
-    character.body -= dmg;
     Characters.update(character._id, {$set: {body: character.body}})
   }
 }

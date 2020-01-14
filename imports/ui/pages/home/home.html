@@ -10,7 +10,12 @@
         <ul>
           Characters:
           {{#each character in characters}}
-            <li><a href="{{characterLink character}}">{{character.name}}</a></li>
+            <li>
+              {{#if character.dead}}
+                [dead]
+              {{/if}}
+              <a href="{{characterLink character}}">{{character.name}}</a>
+            </li>
           {{/each}}
         </ul>
       {{/if}}

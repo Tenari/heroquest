@@ -4,10 +4,14 @@ import { Meteor } from 'meteor/meteor';
 import { Characters } from './characters.js';
 import { Lobbies } from '/imports/api/lobbies/lobbies.js';
 
-Meteor.publish('myCharacters', function () {
+Meteor.publish('myCharacters', function (livingOnly) {
   if (!this.userId) return this.ready();
+  let conditions = {userId: this.userId};
+  if (livingOnly) {
+    conditions.dead = false;
+  }
 
-  return Characters.find({userId: this.userId});
+  return Characters.find(conditions);
 });
 Meteor.publish('characters.id', function (id) {
   if (!this.userId) return this.ready();

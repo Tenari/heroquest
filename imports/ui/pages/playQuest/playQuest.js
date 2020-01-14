@@ -19,7 +19,7 @@ Template.Quest_play.onCreated(function() {
   this.quest = new ReactiveVar(null);
   this.mode = new ReactiveVar(null);
   this.lId = new ReactiveVar(null);
-  this.subscribe('myCharacters');
+  this.subscribe('myCharacters', true);
   this.subscribe('games.all');
   if (qId) {
     var lobbies = this.subscribe('lobbies.quest', qId);
