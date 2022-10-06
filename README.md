@@ -56,6 +56,7 @@ Read the original board game [rules](http://english.yeoldeinn.com/system.php).
 4. Animation of attacker attempting his first strike. either miss, block, or hit.
 5. Either animation of defender doing nothing, or blocking, or being injured.
 7. repeat process until attacker has no more strikes
+8. combat dice have 3 hit sides, 2 hero defence sides, and 1 monster defense side
 
 #### Mind:
 
